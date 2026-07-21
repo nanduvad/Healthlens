@@ -22,8 +22,9 @@ export interface TriageFormData {
 }
 
 const SymptomIllustration: React.FC<{ imageKey: string; color: string; realImg?: string }> = ({ imageKey, color, realImg }) => {
-  if (realImg && !imageKey.startsWith('svg-')) {
-    return <img src={realImg} className="symptom-card-image" alt="Symptom" />;
+  const imgSrc = realImg || imageKey;
+  if (imgSrc.startsWith('/assets/') || imgSrc.endsWith('.png') || imgSrc.endsWith('.jpg')) {
+    return <img src={imgSrc} className="symptom-card-image" alt="Symptom illustration" />;
   }
 
   return (
@@ -455,36 +456,36 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
 
   const availableSymptoms = [
     // Cardiorespiratory
-    { name: 'Chest Pain', icon: Heart, color: 'var(--accent-rose)', image: 'svg-chest-pain', realImage: '/assets/sym_chest_pain.png', category: 'Cardiorespiratory' as const },
-    { name: 'Shortness of Breath', icon: Activity, color: 'var(--accent-cyan)', image: 'svg-breath', realImage: '/assets/sym_breath.png', category: 'Cardiorespiratory' as const },
-    { name: 'Persistent Cough', icon: Activity, color: 'var(--accent-cyan)', image: 'svg-cough', category: 'Cardiorespiratory' as const },
-    { name: 'Sore Throat', icon: Activity, color: 'var(--accent-cyan)', image: 'svg-throat', category: 'Cardiorespiratory' as const },
-    { name: 'Wheezing / Airway Stridor', icon: Wind, color: 'var(--accent-cyan)', image: 'svg-wheeze', category: 'Cardiorespiratory' as const },
-    { name: 'Palpitations / Rapid Heart Rate', icon: Zap, color: 'var(--accent-rose)', image: 'svg-palpitations', category: 'Cardiorespiratory' as const },
-    { name: 'Swelling / Edema', icon: Activity, color: 'var(--accent-purple)', image: 'svg-swelling', category: 'Cardiorespiratory' as const },
+    { name: 'Chest Pain', icon: Heart, color: 'var(--accent-rose)', image: '/assets/sym_chest_pain.png', category: 'Cardiorespiratory' as const },
+    { name: 'Shortness of Breath', icon: Activity, color: 'var(--accent-cyan)', image: '/assets/sym_breath.png', category: 'Cardiorespiratory' as const },
+    { name: 'Persistent Cough', icon: Activity, color: 'var(--accent-cyan)', image: '/assets/sym_cough.png', category: 'Cardiorespiratory' as const },
+    { name: 'Sore Throat', icon: Activity, color: 'var(--accent-cyan)', image: '/assets/sym_throat.png', category: 'Cardiorespiratory' as const },
+    { name: 'Wheezing / Airway Stridor', icon: Wind, color: 'var(--accent-cyan)', image: '/assets/sym_wheeze.png', category: 'Cardiorespiratory' as const },
+    { name: 'Palpitations / Rapid Heart Rate', icon: Zap, color: 'var(--accent-rose)', image: '/assets/sym_palpitations.png', category: 'Cardiorespiratory' as const },
+    { name: 'Swelling / Edema', icon: Activity, color: 'var(--accent-purple)', image: '/assets/sym_swelling.png', category: 'Cardiorespiratory' as const },
 
     // Neurological
-    { name: 'Severe Headache', icon: Brain, color: 'var(--accent-purple)', image: 'svg-headache', realImage: '/assets/sym_headache.png', category: 'Neurological' as const },
-    { name: 'Dizziness / Vertigo', icon: Compass, color: 'var(--accent-purple)', image: 'svg-dizzy', category: 'Neurological' as const },
-    { name: 'Loss of Taste / Smell', icon: Brain, color: 'var(--accent-purple)', image: 'svg-sensory', category: 'Neurological' as const },
-    { name: 'Numbness / Tingling', icon: Brain, color: 'var(--accent-purple)', image: 'svg-numbness', category: 'Neurological' as const },
-    { name: 'Confusion / Brain Fog', icon: Brain, color: 'var(--accent-purple)', image: 'svg-confusion', category: 'Neurological' as const },
-    { name: 'Vision Blur / Light Sensitivity', icon: Eye, color: 'var(--accent-purple)', image: 'svg-vision', category: 'Neurological' as const },
+    { name: 'Severe Headache', icon: Brain, color: 'var(--accent-purple)', image: '/assets/sym_headache.png', category: 'Neurological' as const },
+    { name: 'Dizziness / Vertigo', icon: Compass, color: 'var(--accent-purple)', image: '/assets/sym_dizzy.png', category: 'Neurological' as const },
+    { name: 'Loss of Taste / Smell', icon: Brain, color: 'var(--accent-purple)', image: '/assets/sym_sensory.png', category: 'Neurological' as const },
+    { name: 'Numbness / Tingling', icon: Brain, color: 'var(--accent-purple)', image: '/assets/sym_numbness.png', category: 'Neurological' as const },
+    { name: 'Confusion / Brain Fog', icon: Brain, color: 'var(--accent-purple)', image: '/assets/sym_confusion.png', category: 'Neurological' as const },
+    { name: 'Vision Blur / Light Sensitivity', icon: Eye, color: 'var(--accent-purple)', image: '/assets/sym_vision.png', category: 'Neurological' as const },
 
     // Gastrointestinal
-    { name: 'Nausea / Vomiting', icon: Frown, color: 'var(--accent-orange)', image: 'svg-nausea', category: 'Gastrointestinal' as const },
-    { name: 'Abdominal Pain', icon: Activity, color: 'var(--accent-orange)', image: 'svg-abdominal', category: 'Gastrointestinal' as const },
-    { name: 'Diarrhea', icon: Frown, color: 'var(--accent-orange)', image: 'svg-diarrhea', category: 'Gastrointestinal' as const },
+    { name: 'Nausea / Vomiting', icon: Frown, color: 'var(--accent-orange)', image: '/assets/sym_nausea.png', category: 'Gastrointestinal' as const },
+    { name: 'Abdominal Pain', icon: Activity, color: 'var(--accent-orange)', image: '/assets/sym_abdominal.png', category: 'Gastrointestinal' as const },
+    { name: 'Diarrhea', icon: Frown, color: 'var(--accent-orange)', image: '/assets/sym_diarrhea.png', category: 'Gastrointestinal' as const },
 
     // Systemic
-    { name: 'Fever & Chills', icon: Thermometer, color: 'var(--accent-orange)', image: 'svg-fever', realImage: '/assets/sym_fever.png', category: 'Systemic' as const },
-    { name: 'Muscle / Joint Pain', icon: Activity, color: 'var(--accent-orange)', image: 'svg-muscle', category: 'Systemic' as const },
-    { name: 'Fatigue / Extreme Weakness', icon: Frown, color: 'var(--accent-orange)', image: 'svg-fatigue', category: 'Systemic' as const },
-    { name: 'Night Sweats', icon: Droplets, color: 'var(--accent-orange)', image: 'svg-sweat', category: 'Systemic' as const },
+    { name: 'Fever & Chills', icon: Thermometer, color: 'var(--accent-orange)', image: '/assets/sym_fever.png', category: 'Systemic' as const },
+    { name: 'Muscle / Joint Pain', icon: Activity, color: 'var(--accent-orange)', image: '/assets/sym_muscle.png', category: 'Systemic' as const },
+    { name: 'Fatigue / Extreme Weakness', icon: Frown, color: 'var(--accent-orange)', image: '/assets/sym_fatigue.png', category: 'Systemic' as const },
+    { name: 'Night Sweats', icon: Droplets, color: 'var(--accent-orange)', image: '/assets/sym_sweats.png', category: 'Systemic' as const },
 
     // Other
-    { name: 'Skin Rash / Hives', icon: Flame, color: 'var(--accent-orange)', image: 'svg-rash', category: 'Other' as const },
-    { name: 'Earache / Hearing Changes', icon: Activity, color: 'var(--accent-orange)', image: 'svg-ear', category: 'Other' as const }
+    { name: 'Skin Rash / Hives', icon: Flame, color: 'var(--accent-orange)', image: '/assets/sym_rash.png', category: 'Other' as const },
+    { name: 'Earache / Hearing Changes', icon: Activity, color: 'var(--accent-orange)', image: '/assets/sym_earache.png', category: 'Other' as const }
   ];
 
   const preExistingConditions = ['Hypertension','Gastric issues','Blood Pressure','Diabetes (Type I/II)', 'Asthma/COPD', 'Coronary Heart Disease', 'None of these'];
