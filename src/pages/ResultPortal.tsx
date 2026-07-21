@@ -1,17 +1,19 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, RefreshCw, CheckCircle2, MessageSquare, ThumbsUp, ThumbsDown } from 'lucide-react';
+import { ArrowRight, RefreshCw, CheckCircle2, MessageSquare, ThumbsUp, ThumbsDown, Lock } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { type TriageResult, submitFeedback, updatePatientStatus } from '../services/api';
+import { type Role } from '../App';
 
 interface ResultPortalProps {
   patientId: string;
   triageResult: TriageResult;
   onRestart: () => void;
   onSaveAssessment: () => void;
+  role: Role;
 }
 
-export const ResultPortal: React.FC<ResultPortalProps> = ({ patientId, triageResult, onRestart, onSaveAssessment }) => {
+export const ResultPortal: React.FC<ResultPortalProps> = ({ patientId, triageResult, onRestart, onSaveAssessment, role }) => {
   const [feedbackSubmitted, setFeedbackSubmitted] = useState(false);
   const [selectedFeedbackType, setSelectedFeedbackType] = useState<'correct' | 'incorrect' | 'requires_adjustment' | null>(null);
   const [expectedOutcome, setExpectedOutcome] = useState<'Immediate' | 'Within-Day' | 'Routine' | ''>('');
@@ -272,77 +274,97 @@ export const ResultPortal: React.FC<ResultPortalProps> = ({ patientId, triageRes
         </motion.div>
 
         {/* Clinician review feedback section */}
-        <motion.div variants={itemVariants} style={styles.card} className="glass-card">
-          <h3 style={styles.cardTitle}><MessageSquare size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} /> Clinician Validation Review</h3>
-          <p style={styles.cardSub}>Record expected outcome telemetry to continuously train and optimize classifier boundaries.</p>
+        {role !== 'patient' ? (
+          <motion.div variants={itemVariants} style={styles.card} className="glass-card">
+            <h3 style={styles.cardTitle}><MessageSquare size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} /> Clinician Validation Review</h3>
+            <p style={styles.cardSub}>Record expected outcome telemetry to continuously train and optimize classifier boundaries.</p>
 
-          {feedbackSubmitted ? (
-            <div style={styles.feedbackSuccess}>
-              <CheckCircle2 size={20} color="var(--accent-emerald)" style={{ marginRight: 10 }} />
-              Feedback logged successfully. Database row flagged for periodic retraining dataset.
-            </div>
-          ) : (
-            <div style={styles.feedbackForm}>
-              <span style={styles.feedbackLabel}>Does the triage recommendation match clinical consensus?</span>
-              <div style={styles.feedbackButtons}>
+            {feedbackSubmitted ? (
+              <div style={styles.feedbackSuccess}>
+                <CheckCircle2 size={20} color="var(--accent-emerald)" style={{ marginRight: 10 }} />
+                Feedback logged successfully. Database row flagged for periodic retraining dataset.
+              </div>
+            ) : (
+              <div style={styles.feedbackForm}>
+                <span style={styles.feedbackLabel}>Does the triage recommendation match clinical consensus?</span>
+                <div style={styles.feedbackButtons}>
+                  <button 
+                    onClick={() => setSelectedFeedbackType('correct')}
+                    style={{
+                      ...styles.feedbackBtn,
+                      borderColor: selectedFeedbackType === 'correct' ? 'var(--accent-emerald)' : 'var(--border-primary)',
+                      color: selectedFeedbackType === 'correct' ? 'var(--accent-emerald)' : 'var(--text-primary)',
+                      backgroundColor: selectedFeedbackType === 'correct' ? 'rgba(16, 185, 129, 0.08)' : 'transparent',
+                    }}
+                  >
+                    <ThumbsUp size={16} style={{ marginRight: 8 }} /> Consensus Match (Correct)
+                  </button>
+                  <button 
+                    onClick={() => setSelectedFeedbackType('incorrect')}
+                    style={{
+                      ...styles.feedbackBtn,
+                      borderColor: selectedFeedbackType === 'incorrect' ? 'var(--accent-rose)' : 'var(--border-primary)',
+                      color: selectedFeedbackType === 'incorrect' ? 'var(--accent-rose)' : 'var(--text-primary)',
+                      backgroundColor: selectedFeedbackType === 'incorrect' ? 'rgba(244, 63, 94, 0.08)' : 'transparent',
+                    }}
+                  >
+                    <ThumbsDown size={16} style={{ marginRight: 8 }} /> Incorrect Urgency
+                  </button>
+                </div>
+
+                {selectedFeedbackType === 'incorrect' && (
+                  <div style={styles.expectedOutcomeBox}>
+                    <label style={styles.fieldLabel}>Select Expected Clinical Classification:</label>
+                    <div style={styles.severityGrid}>
+                      {(['Routine', 'Within-Day', 'Immediate'] as const).map((lvl) => (
+                        <button
+                          key={lvl}
+                          onClick={() => setExpectedOutcome(lvl)}
+                          style={{
+                            ...styles.sevBtn,
+                            borderColor: expectedOutcome === lvl ? 'var(--accent-cyan)' : 'var(--border-primary)',
+                            backgroundColor: expectedOutcome === lvl ? 'rgba(6, 182, 212, 0.08)' : 'transparent',
+                          }}
+                        >
+                          {lvl}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
                 <button 
-                  onClick={() => setSelectedFeedbackType('correct')}
+                  onClick={handlePostFeedback}
                   style={{
-                    ...styles.feedbackBtn,
-                    borderColor: selectedFeedbackType === 'correct' ? 'var(--accent-emerald)' : 'var(--border-primary)',
-                    color: selectedFeedbackType === 'correct' ? 'var(--accent-emerald)' : 'var(--text-primary)',
-                    backgroundColor: selectedFeedbackType === 'correct' ? 'rgba(16, 185, 129, 0.08)' : 'transparent',
+                    ...styles.postFeedbackBtn,
+                    opacity: selectedFeedbackType ? 1 : 0.6
                   }}
+                  disabled={!selectedFeedbackType || isSubmittingFeedback}
                 >
-                  <ThumbsUp size={16} style={{ marginRight: 8 }} /> Consensus Match (Correct)
-                </button>
-                <button 
-                  onClick={() => setSelectedFeedbackType('incorrect')}
-                  style={{
-                    ...styles.feedbackBtn,
-                    borderColor: selectedFeedbackType === 'incorrect' ? 'var(--accent-rose)' : 'var(--border-primary)',
-                    color: selectedFeedbackType === 'incorrect' ? 'var(--accent-rose)' : 'var(--text-primary)',
-                    backgroundColor: selectedFeedbackType === 'incorrect' ? 'rgba(244, 63, 94, 0.08)' : 'transparent',
-                  }}
-                >
-                  <ThumbsDown size={16} style={{ marginRight: 8 }} /> Incorrect Urgency
+                  {isSubmittingFeedback ? "Logging..." : "Log Validation Parameters"}
                 </button>
               </div>
-
-              {selectedFeedbackType === 'incorrect' && (
-                <div style={styles.expectedOutcomeBox}>
-                  <label style={styles.fieldLabel}>Select Expected Clinical Classification:</label>
-                  <div style={styles.severityGrid}>
-                    {(['Routine', 'Within-Day', 'Immediate'] as const).map((lvl) => (
-                      <button
-                        key={lvl}
-                        onClick={() => setExpectedOutcome(lvl)}
-                        style={{
-                          ...styles.sevBtn,
-                          borderColor: expectedOutcome === lvl ? 'var(--accent-cyan)' : 'var(--border-primary)',
-                          backgroundColor: expectedOutcome === lvl ? 'rgba(6, 182, 212, 0.08)' : 'transparent',
-                        }}
-                      >
-                        {lvl}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
-
-              <button 
-                onClick={handlePostFeedback}
-                style={{
-                  ...styles.postFeedbackBtn,
-                  opacity: selectedFeedbackType ? 1 : 0.6
-                }}
-                disabled={!selectedFeedbackType || isSubmittingFeedback}
-              >
-                {isSubmittingFeedback ? "Logging..." : "Log Validation Parameters"}
-              </button>
+            )}
+          </motion.div>
+        ) : (
+          <motion.div variants={itemVariants} style={styles.card} className="glass-card">
+            <h3 style={styles.cardTitle}><MessageSquare size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} /> Clinician Validation Review</h3>
+            <p style={styles.cardSub}>Clinician feedback pending review. Patient access restricted.</p>
+            <div style={{
+              backgroundColor: 'rgba(255, 255, 255, 0.02)',
+              border: '1px solid var(--border-primary)',
+              borderRadius: '12px',
+              padding: '16px',
+              color: 'var(--text-secondary)',
+              fontSize: '0.9rem',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '10px'
+            }}>
+              <Lock size={16} color="var(--accent-purple)" /> Clinician validation console is only available to Clinicians or Administrators.
             </div>
-          )}
-        </motion.div>
+          </motion.div>
+        )}
 
         {/* Action Button Bar */}
         <motion.div variants={itemVariants} style={styles.btnRow}>

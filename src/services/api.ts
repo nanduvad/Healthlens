@@ -190,12 +190,28 @@ function getOfflineFallback<T>(method: string, path: string, body: any): T {
   if (method === 'POST' && path === '/assessments/normalize') {
     const text = (body.text || '').toLowerCase();
     const detected: string[] = [];
-    if (text.includes('chest') || text.includes('chati')) detected.push('Chest Pain');
-    if (text.includes('breath') || text.includes('swasa')) detected.push('Shortness of Breath');
-    if (text.includes('fever') || text.includes('jwaram')) detected.push('Fever & Chills');
-    if (text.includes('headache') || text.includes('tala')) detected.push('Severe Headache');
+    if (text.includes('chest') || text.includes('chati') || text.includes('heart pain')) detected.push('Chest Pain');
+    if (text.includes('breath') || text.includes('swasa') || text.includes('difficulty breathing')) detected.push('Shortness of Breath');
+    if (text.includes('fever') || text.includes('jwaram') || text.includes('chill') || text.includes('shivering')) detected.push('Fever & Chills');
+    if (text.includes('headache') || text.includes('tala') || text.includes('migraine')) detected.push('Severe Headache');
     if (text.includes('cough') || text.includes('daggu')) detected.push('Persistent Cough');
     if (text.includes('throat') || text.includes('gontu')) detected.push('Sore Throat');
+    if (text.includes('dizzy') || text.includes('vertigo') || text.includes('giri') || text.includes('spinning')) detected.push('Dizziness / Vertigo');
+    if (text.includes('nausea') || text.includes('vomit') || text.includes('vantulu')) detected.push('Nausea / Vomiting');
+    if (text.includes('abdominal') || text.includes('stomach') || text.includes('kanti') || text.includes('stomach pain')) detected.push('Abdominal Pain');
+    if (text.includes('muscle') || text.includes('joint') || text.includes('body ache') || text.includes('nollu')) detected.push('Muscle / Joint Pain');
+    if (text.includes('fatigue') || text.includes('weakness') || text.includes('tired') || text.includes('nirasam')) detected.push('Fatigue / Extreme Weakness');
+    if (text.includes('palpitation') || text.includes('rapid heart') || text.includes('heart beat') || text.includes('fluttering')) detected.push('Palpitations / Rapid Heart Rate');
+    if (text.includes('rash') || text.includes('hives') || text.includes('itching') || text.includes('duvada')) detected.push('Skin Rash / Hives');
+    if (text.includes('diarrhea') || text.includes('loose motion') || text.includes('bedi')) detected.push('Diarrhea');
+    if (text.includes('taste') || text.includes('smell') || text.includes('vasana')) detected.push('Loss of Taste / Smell');
+    if (text.includes('numbness') || text.includes('tingling') || text.includes('thimmiri')) detected.push('Numbness / Tingling');
+    if (text.includes('wheezing') || text.includes('stridor') || text.includes('whistling')) detected.push('Wheezing / Airway Stridor');
+    if (text.includes('confusion') || text.includes('brain fog') || text.includes('dazed')) detected.push('Confusion / Brain Fog');
+    if (text.includes('sweat') || text.includes('night sweat') || text.includes('chemata')) detected.push('Night Sweats');
+    if (text.includes('swelling') || text.includes('edema') || text.includes('water retention')) detected.push('Swelling / Edema');
+    if (text.includes('earache') || text.includes('ear pain') || text.includes('hearing')) detected.push('Earache / Hearing Changes');
+    if (text.includes('vision') || text.includes('blur') || text.includes('light sensitivity')) detected.push('Vision Blur / Light Sensitivity');
     return { detected_symptoms: detected } as any;
   }
 

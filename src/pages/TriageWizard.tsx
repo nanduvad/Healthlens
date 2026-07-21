@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowLeft, ArrowRight, Activity, ShieldCheck, Thermometer, Brain, Heart, AlertCircle, Mic, MicOff, Search, UserCheck } from 'lucide-react';
+import { ArrowLeft, ArrowRight, Activity, ShieldCheck, Thermometer, Brain, Heart, AlertCircle, Mic, MicOff, Search, UserCheck, Wind, Zap, Frown, Flame, Droplets, Eye, Compass } from 'lucide-react';
 import { lookupPatient } from '../services/api';
 
 interface TriageWizardProps {
@@ -40,6 +40,8 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
   const [isChecking, setIsChecking] = useState(false);
   const [lookupStatus, setLookupStatus] = useState<'idle' | 'matched' | 'new'>('idle');
   const [isRecording, setIsRecording] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [activeCategory, setActiveCategory] = useState<'All' | 'Cardiorespiratory' | 'Neurological' | 'Gastrointestinal' | 'Systemic' | 'Other'>('All');
 
   const validateStep = () => {
     const newErrors: { [key: string]: boolean } = {};
@@ -155,22 +157,55 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
         const matches = [
           { keyword: 'chest', item: 'Chest Pain' },
           { keyword: 'chati', item: 'Chest Pain' },
-          { keyword: 'heart', item: 'Chest Pain' },
-          { keyword: 'pain', item: 'Chest Pain' },
+          { keyword: 'heart pain', item: 'Chest Pain' },
           { keyword: 'breath', item: 'Shortness of Breath' },
           { keyword: 'swasa', item: 'Shortness of Breath' },
-          { keyword: 'lungs', item: 'Shortness of Breath' },
-          { keyword: 'difficulty', item: 'Shortness of Breath' },
+          { keyword: 'difficulty breathing', item: 'Shortness of Breath' },
           { keyword: 'fever', item: 'Fever & Chills' },
           { keyword: 'jwaram', item: 'Fever & Chills' },
-          { keyword: 'hot', item: 'Fever & Chills' },
-          { keyword: 'temp', item: 'Fever & Chills' },
-          { keyword: 'head', item: 'Severe Headache' },
+          { keyword: 'chill', item: 'Fever & Chills' },
+          { keyword: 'headache', item: 'Severe Headache' },
           { keyword: 'tala', item: 'Severe Headache' },
           { keyword: 'cough', item: 'Persistent Cough' },
           { keyword: 'daggu', item: 'Persistent Cough' },
           { keyword: 'throat', item: 'Sore Throat' },
           { keyword: 'gontu', item: 'Sore Throat' },
+          { keyword: 'dizzy', item: 'Dizziness / Vertigo' },
+          { keyword: 'giri', item: 'Dizziness / Vertigo' },
+          { keyword: 'spinning', item: 'Dizziness / Vertigo' },
+          { keyword: 'nausea', item: 'Nausea / Vomiting' },
+          { keyword: 'vomit', item: 'Nausea / Vomiting' },
+          { keyword: 'vantulu', item: 'Nausea / Vomiting' },
+          { keyword: 'stomach', item: 'Abdominal Pain' },
+          { keyword: 'abdominal', item: 'Abdominal Pain' },
+          { keyword: 'kanti', item: 'Abdominal Pain' },
+          { keyword: 'joint', item: 'Muscle / Joint Pain' },
+          { keyword: 'muscle', item: 'Muscle / Joint Pain' },
+          { keyword: 'body ache', item: 'Muscle / Joint Pain' },
+          { keyword: 'nollu', item: 'Muscle / Joint Pain' },
+          { keyword: 'fatigue', item: 'Fatigue / Extreme Weakness' },
+          { keyword: 'weakness', item: 'Fatigue / Extreme Weakness' },
+          { keyword: 'nirasam', item: 'Fatigue / Extreme Weakness' },
+          { keyword: 'palpitation', item: 'Palpitations / Rapid Heart Rate' },
+          { keyword: 'rapid heart', item: 'Palpitations / Rapid Heart Rate' },
+          { keyword: 'rash', item: 'Skin Rash / Hives' },
+          { keyword: 'itching', item: 'Skin Rash / Hives' },
+          { keyword: 'duvada', item: 'Skin Rash / Hives' },
+          { keyword: 'diarrhea', item: 'Diarrhea' },
+          { keyword: 'bedi', item: 'Diarrhea' },
+          { keyword: 'taste', item: 'Loss of Taste / Smell' },
+          { keyword: 'smell', item: 'Loss of Taste / Smell' },
+          { keyword: 'numb', item: 'Numbness / Tingling' },
+          { keyword: 'tingling', item: 'Numbness / Tingling' },
+          { keyword: 'thimmiri', item: 'Numbness / Tingling' },
+          { keyword: 'wheez', item: 'Wheezing / Airway Stridor' },
+          { keyword: 'confus', item: 'Confusion / Brain Fog' },
+          { keyword: 'fog', item: 'Confusion / Brain Fog' },
+          { keyword: 'sweat', item: 'Night Sweats' },
+          { keyword: 'swell', item: 'Swelling / Edema' },
+          { keyword: 'ear', item: 'Earache / Hearing Changes' },
+          { keyword: 'vision', item: 'Vision Blur / Light Sensitivity' },
+          { keyword: 'blur', item: 'Vision Blur / Light Sensitivity' }
         ];
 
         matches.forEach(m => {
@@ -214,12 +249,37 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
   };
 
   const availableSymptoms = [
-    { name: 'Chest Pain', icon: Heart, color: 'var(--accent-rose)', image: '/assets/sym_chest_pain.png' },
-    { name: 'Shortness of Breath', icon: Activity, color: 'var(--accent-cyan)', image: '/assets/sym_breath.png' },
-    { name: 'Fever & Chills', icon: Thermometer, color: 'var(--accent-orange)', image: '/assets/sym_fever.png' },
-    { name: 'Severe Headache', icon: Brain, color: 'var(--accent-purple)', image: '/assets/sym_headache.png' },
-    { name: 'Persistent Cough', icon: Activity, color: 'var(--accent-cyan)', image: 'svg-cough' },
-    { name: 'Sore Throat', icon: Activity, color: 'var(--accent-cyan)', image: 'svg-throat' },
+    // Cardiorespiratory
+    { name: 'Chest Pain', icon: Heart, color: 'var(--accent-rose)', image: '/assets/sym_chest_pain.png', category: 'Cardiorespiratory' as const },
+    { name: 'Shortness of Breath', icon: Activity, color: 'var(--accent-cyan)', image: '/assets/sym_breath.png', category: 'Cardiorespiratory' as const },
+    { name: 'Persistent Cough', icon: Activity, color: 'var(--accent-cyan)', image: 'svg-cough', category: 'Cardiorespiratory' as const },
+    { name: 'Sore Throat', icon: Activity, color: 'var(--accent-cyan)', image: 'svg-throat', category: 'Cardiorespiratory' as const },
+    { name: 'Wheezing / Airway Stridor', icon: Wind, color: 'var(--accent-cyan)', image: 'svg-wheeze', category: 'Cardiorespiratory' as const },
+    { name: 'Palpitations / Rapid Heart Rate', icon: Zap, color: 'var(--accent-rose)', image: 'svg-heart', category: 'Cardiorespiratory' as const },
+    { name: 'Swelling / Edema', icon: Activity, color: 'var(--accent-purple)', image: 'svg-swelling', category: 'Cardiorespiratory' as const },
+
+    // Neurological
+    { name: 'Severe Headache', icon: Brain, color: 'var(--accent-purple)', image: '/assets/sym_headache.png', category: 'Neurological' as const },
+    { name: 'Dizziness / Vertigo', icon: Compass, color: 'var(--accent-purple)', image: 'svg-dizzy', category: 'Neurological' as const },
+    { name: 'Loss of Taste / Smell', icon: Brain, color: 'var(--accent-purple)', image: 'svg-sensory', category: 'Neurological' as const },
+    { name: 'Numbness / Tingling', icon: Brain, color: 'var(--accent-purple)', image: 'svg-numbness', category: 'Neurological' as const },
+    { name: 'Confusion / Brain Fog', icon: Brain, color: 'var(--accent-purple)', image: 'svg-confusion', category: 'Neurological' as const },
+    { name: 'Vision Blur / Light Sensitivity', icon: Eye, color: 'var(--accent-purple)', image: 'svg-vision', category: 'Neurological' as const },
+
+    // Gastrointestinal
+    { name: 'Nausea / Vomiting', icon: Frown, color: 'var(--accent-orange)', image: 'svg-nausea', category: 'Gastrointestinal' as const },
+    { name: 'Abdominal Pain', icon: Activity, color: 'var(--accent-orange)', image: 'svg-abdominal', category: 'Gastrointestinal' as const },
+    { name: 'Diarrhea', icon: Frown, color: 'var(--accent-orange)', image: 'svg-diarrhea', category: 'Gastrointestinal' as const },
+
+    // Systemic
+    { name: 'Fever & Chills', icon: Thermometer, color: 'var(--accent-orange)', image: '/assets/sym_fever.png', category: 'Systemic' as const },
+    { name: 'Muscle / Joint Pain', icon: Activity, color: 'var(--accent-orange)', image: 'svg-muscle', category: 'Systemic' as const },
+    { name: 'Fatigue / Extreme Weakness', icon: Frown, color: 'var(--accent-orange)', image: 'svg-fatigue', category: 'Systemic' as const },
+    { name: 'Night Sweats', icon: Droplets, color: 'var(--accent-orange)', image: 'svg-sweat', category: 'Systemic' as const },
+
+    // Other
+    { name: 'Skin Rash / Hives', icon: Flame, color: 'var(--accent-orange)', image: 'svg-rash', category: 'Other' as const },
+    { name: 'Earache / Hearing Changes', icon: Activity, color: 'var(--accent-orange)', image: 'svg-ear', category: 'Other' as const }
   ];
 
   const preExistingConditions = ['Hypertension', 'Diabetes (Type I/II)', 'Asthma/COPD', 'Coronary Heart Disease', 'None of these'];
@@ -418,51 +478,126 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
                 </div>
               )}
 
-              <div style={styles.symptomGrid}>
-                {availableSymptoms.map((sym) => {
-                  const isSelected = formData.symptoms.includes(sym.name);
-                  return (
-                    <motion.div
-                      key={sym.name}
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.98 }}
-                      onClick={() => toggleSymptom(sym.name)}
-                      style={{
-                        borderColor: isSelected ? sym.color : 'var(--border-primary)',
-                        boxShadow: isSelected ? `0 0 20px ${sym.color}25` : 'none',
-                      }}
-                      className="symptom-visual-card"
-                    >
-                      {/* Diagnostic custom visual overlay */}
-                      {sym.image.startsWith('svg-') ? (
-                        sym.image === 'svg-cough' ? (
-                          <svg viewBox="0 0 100 100" className="symptom-card-image" style={{ background: '#090d16', opacity: 0.2 }}>
-                            <path d="M 50 20 C 40 20, 30 30, 30 45 C 30 55, 40 60, 40 70 L 60 70 C 60 60, 70 55, 70 45 C 70 30, 60 20, 50 20" fill="none" stroke="var(--accent-cyan)" strokeWidth="3" />
-                            <path d="M 35 85 L 65 85 M 40 90 L 60 90" stroke="var(--accent-cyan)" strokeWidth="3" strokeLinecap="round" />
-                            <circle cx="50" cy="45" r="8" fill="var(--accent-cyan)" opacity="0.6" />
-                            <path d="M 45 40 L 55 50" stroke="var(--accent-cyan)" strokeWidth="2" />
-                          </svg>
-                        ) : (
-                          <svg viewBox="0 0 100 100" className="symptom-card-image" style={{ background: '#090d16', opacity: 0.2 }}>
-                            <path d="M 30 20 L 70 20 L 60 60 L 50 90 L 40 60 Z" fill="none" stroke="var(--accent-purple)" strokeWidth="3" />
-                            <path d="M 40 40 Q 50 50 60 40" stroke="var(--accent-purple)" strokeWidth="2.5" fill="none" />
-                            <path d="M 35 50 Q 50 65 65 50" stroke="var(--accent-purple)" strokeWidth="2.5" fill="none" />
-                            <circle cx="50" cy="50" r="10" fill="var(--accent-purple)" opacity="0.6" />
-                          </svg>
-                        )
-                      ) : (
-                        <img src={sym.image} className="symptom-card-image" alt={sym.name} />
-                      )}
+              {/* Symptom Search Bar */}
+              <div style={styles.symptomSearchWrapper}>
+                <Search size={18} style={styles.symptomSearchIcon} />
+                <input
+                  type="text"
+                  placeholder="Search symptoms (e.g. chest, dizziness, fever)..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  style={styles.symptomSearchInput}
+                />
+                {searchTerm && (
+                  <button 
+                    onClick={() => setSearchTerm('')} 
+                    style={{
+                      position: 'absolute',
+                      right: '12px',
+                      top: '50%',
+                      transform: 'translateY(-50%)',
+                      background: 'none',
+                      border: 'none',
+                      color: 'var(--text-secondary)',
+                      cursor: 'pointer',
+                      fontSize: '0.85rem',
+                      fontWeight: 600,
+                    }}
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
 
-                      <div className="symptom-card-gradient" />
-                      
-                      <div className="symptom-card-text">
-                        <sym.icon size={18} color={sym.color} />
-                        <span>{sym.name}</span>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+              {/* Category Filter Tabs */}
+              <div style={styles.categoryTabs}>
+                {(['All', 'Cardiorespiratory', 'Neurological', 'Gastrointestinal', 'Systemic', 'Other'] as const).map((cat) => (
+                  <button
+                    key={cat}
+                    onClick={() => setActiveCategory(cat)}
+                    style={{
+                      ...styles.categoryTabBtn,
+                      borderColor: activeCategory === cat ? 'var(--accent-cyan)' : 'var(--border-primary)',
+                      backgroundColor: activeCategory === cat ? 'rgba(6,182,212,0.08)' : 'transparent',
+                      color: activeCategory === cat ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                    }}
+                  >
+                    {cat}
+                  </button>
+                ))}
+              </div>
+
+              <div style={styles.symptomGrid}>
+                {availableSymptoms
+                  .filter((sym) => {
+                    const matchesSearch = sym.name.toLowerCase().includes(searchTerm.toLowerCase());
+                    const matchesCategory = activeCategory === 'All' || sym.category === activeCategory;
+                    return matchesSearch && matchesCategory;
+                  })
+                  .map((sym) => {
+                    const isSelected = formData.symptoms.includes(sym.name);
+                    return (
+                      <motion.div
+                        key={sym.name}
+                        whileHover={{ scale: 1.03 }}
+                        whileTap={{ scale: 0.98 }}
+                        onClick={() => toggleSymptom(sym.name)}
+                        style={{
+                          borderColor: isSelected ? sym.color : 'var(--border-primary)',
+                          boxShadow: isSelected ? `0 0 20px ${sym.color}25` : 'none',
+                        }}
+                        className="symptom-visual-card"
+                      >
+                        {/* Diagnostic custom visual overlay */}
+                        {sym.image.startsWith('svg-') ? (
+                          sym.image === 'svg-cough' ? (
+                            <svg viewBox="0 0 100 100" className="symptom-card-image" style={{ background: '#090d16', opacity: 0.2 }}>
+                              <path d="M 50 20 C 40 20, 30 30, 30 45 C 30 55, 40 60, 40 70 L 60 70 C 60 60, 70 55, 70 45 C 70 30, 60 20, 50 20" fill="none" stroke="var(--accent-cyan)" strokeWidth="3" />
+                              <path d="M 35 85 L 65 85 M 40 90 L 60 90" stroke="var(--accent-cyan)" strokeWidth="3" strokeLinecap="round" />
+                              <circle cx="50" cy="45" r="8" fill="var(--accent-cyan)" opacity="0.6" />
+                              <path d="M 45 40 L 55 50" stroke="var(--accent-cyan)" strokeWidth="2" />
+                            </svg>
+                          ) : sym.image === 'svg-throat' ? (
+                            <svg viewBox="0 0 100 100" className="symptom-card-image" style={{ background: '#090d16', opacity: 0.2 }}>
+                              <path d="M 30 20 L 70 20 L 60 60 L 50 90 L 40 60 Z" fill="none" stroke="var(--accent-purple)" strokeWidth="3" />
+                              <path d="M 40 40 Q 50 50 60 40" stroke="var(--accent-purple)" strokeWidth="2.5" fill="none" />
+                              <path d="M 35 50 Q 50 65 65 50" stroke="var(--accent-purple)" strokeWidth="2.5" fill="none" />
+                              <circle cx="50" cy="50" r="10" fill="var(--accent-purple)" opacity="0.6" />
+                            </svg>
+                          ) : (
+                            <div className="symptom-card-image-placeholder" style={{
+                              width: '100%',
+                              height: '100%',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              background: 'radial-gradient(circle, rgba(255,255,255,0.02) 0%, rgba(9,13,22,0.6) 100%)',
+                              opacity: 0.15,
+                              position: 'absolute',
+                              top: 0,
+                              left: 0,
+                            }}>
+                              <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%' }}>
+                                <circle cx="50" cy="50" r="35" fill="none" stroke={sym.color} strokeWidth="1" strokeDasharray="3,3" opacity="0.4" />
+                                <circle cx="50" cy="50" r="20" fill="none" stroke={sym.color} strokeWidth="1" opacity="0.2" />
+                                <line x1="50" y1="5" x2="50" y2="95" stroke={sym.color} strokeWidth="0.5" strokeDasharray="2,2" opacity="0.15" />
+                                <line x1="5" y1="50" x2="95" y2="50" stroke={sym.color} strokeWidth="0.5" strokeDasharray="2,2" opacity="0.15" />
+                              </svg>
+                            </div>
+                          )
+                        ) : (
+                          <img src={sym.image} className="symptom-card-image" alt={sym.name} />
+                        )}
+
+                        <div className="symptom-card-gradient" />
+                        
+                        <div className="symptom-card-text">
+                          <sym.icon size={18} color={sym.color} />
+                          <span>{sym.name}</span>
+                        </div>
+                      </motion.div>
+                    );
+                  })}
               </div>
             </motion.div>
           )}
@@ -850,5 +985,49 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     alignItems: 'center',
   },
+  symptomSearchWrapper: {
+    display: 'flex',
+    gap: '12px',
+    marginBottom: '20px',
+    width: '100%',
+    position: 'relative',
+  },
+  symptomSearchInput: {
+    width: '100%',
+    padding: '12px 16px 12px 42px',
+    borderRadius: '12px',
+    border: '1px solid var(--border-primary)',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    color: 'var(--text-primary)',
+    fontSize: '0.95rem',
+    outline: 'none',
+    transition: 'all 0.3s ease',
+  },
+  symptomSearchIcon: {
+    position: 'absolute',
+    left: '14px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    color: 'var(--text-muted)',
+    pointerEvents: 'none',
+  },
+  categoryTabs: {
+    display: 'flex',
+    gap: '8px',
+    marginBottom: '24px',
+    overflowX: 'auto',
+    width: '100%',
+    paddingBottom: '8px',
+  },
+  categoryTabBtn: {
+    padding: '8px 16px',
+    borderRadius: '8px',
+    border: '1px solid var(--border-primary)',
+    cursor: 'pointer',
+    fontSize: '0.85rem',
+    fontWeight: 600,
+    whiteSpace: 'nowrap',
+    transition: 'all 0.3s ease',
+  }
 };
 export default TriageWizard;

@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ShieldCheck, Sparkles, Activity, ChevronDown } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Sparkles, Activity, ChevronDown, Lock } from 'lucide-react';
 import { useTheme } from '../components/ThemeContext';
+import { type Role } from '../App';
 
 interface LandingPageProps {
   onStartAssessment: () => void;
   onViewDashboard: () => void;
+  role: Role;
 }
 
 // Typing hook for headline
@@ -69,7 +71,7 @@ const AnimatedCounter: React.FC<{ value: number; suffix?: string; duration?: num
   return <span>{count.toLocaleString()}{suffix}</span>;
 };
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onStartAssessment, onViewDashboard }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onStartAssessment, onViewDashboard, role }) => {
   const { theme, toggleTheme } = useTheme();
   
   // Custom typing effect for headline
@@ -159,7 +161,10 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartAssessment, onV
           <span style={styles.logoText}>Healthlens<span style={{ color: 'var(--accent-cyan)' }}>AI</span></span>
         </div>
         <div style={styles.navButtons}>
-          <button style={styles.navBtnLink} onClick={onViewDashboard}>Dashboard</button>
+          <button style={styles.navBtnLink} onClick={onViewDashboard}>
+            {role === 'patient' && <Lock size={12} style={{ marginRight: 6, display: 'inline-block', verticalAlign: 'middle' }} />}
+            Dashboard
+          </button>
           <button 
             style={styles.themeToggle} 
             onClick={toggleTheme}
@@ -215,6 +220,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartAssessment, onV
               style={styles.heroSecondaryBtn}
               onClick={onViewDashboard}
             >
+              {role === 'patient' && <Lock size={14} style={{ marginRight: 6, display: 'inline-block', verticalAlign: 'middle' }} />}
               View Analytics
             </motion.button>
           </div>

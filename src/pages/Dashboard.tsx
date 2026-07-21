@@ -1,19 +1,32 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Clock, Trash2, Home, Inbox, Plus, HelpCircle } from 'lucide-react';
+import { Activity, Clock, Trash2, Home, Inbox, Plus, HelpCircle, Lock, Settings, Sparkles } from 'lucide-react';
 import { getPatients, getAnalytics, type AnalyticsPayload, type TriageLog } from '../services/api';
+import { type Role } from '../App';
 
 interface DashboardProps {
   onStartNew: () => void;
   onBackHome: () => void;
+  role: Role;
 }
 
-export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome }) => {
+export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, role }) => {
   const [logs, setLogs] = useState<TriageLog[]>([]);
   const [analytics, setAnalytics] = useState<AnalyticsPayload | null>(null);
   const [filter, setFilter] = useState<'All' | 'High' | 'Medium' | 'Low'>('All');
   const [filteredLogs, setFilteredLogs] = useState<TriageLog[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+
+  // Admin Config Panel States
+  const [confidenceThreshold, setConfidenceThreshold] = useState(85);
+  const [apiDelay, setApiDelay] = useState(3);
+  const [activeModel, setActiveModel] = useState('Gemini-3.5-Clinician-Pro');
+  const [showConsoleSaved, setShowConsoleSaved] = useState(false);
+
+  const handleSaveParams = () => {
+    setShowConsoleSaved(true);
+    setTimeout(() => setShowConsoleSaved(false), 2000);
+  };
 
   const fetchDashboardData = async () => {
     setIsLoading(true);
@@ -90,6 +103,25 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome }) 
       }
     }
   } as const;
+
+  if (role === 'patient') {
+    return (
+      <div style={styles.container}>
+        <div style={styles.emptyState} className="glass-card">
+          <div style={styles.emptyIcon}>
+            <Lock size={48} color="var(--accent-rose)" />
+          </div>
+          <h4 style={styles.emptyTitle}>Access Denied</h4>
+          <p style={styles.emptyText}>
+            You do not have permission to view the clinical operations dashboard.
+          </p>
+          <button style={styles.emptyActionBtn} onClick={onBackHome}>
+            Return Home
+          </button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={styles.container}>
@@ -324,6 +356,77 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome }) 
                   )}
                 </div>
               </div>
+
+              {/* Admin Control Console side-card (Admin only) */}
+              {role === 'admin' && (
+                <div style={{ ...styles.sideCard, marginTop: '20px', borderColor: 'var(--accent-purple)', boxShadow: '0 0 15px rgba(168,85,247,0.1)' }} className="glass-card">
+                  <h3 style={styles.sideCardTitle}>
+                    <Settings size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} /> 
+                    Admin Config Console
+                  </h3>
+                  <p style={styles.sideCardSub}>Triage model hyperparameter adjustments and latency simulation controls.</p>
+                  
+                  <div style={styles.adminControlGroup}>
+                    <div style={styles.adminControlLabel}>
+                      <span>Confidence Limit</span>
+                      <span>{confidenceThreshold}%</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="75" 
+                      max="98" 
+                      value={confidenceThreshold} 
+                      onChange={(e) => setConfidenceThreshold(Number(e.target.value))}
+                      style={styles.adminRangeInput}
+                    />
+                  </div>
+
+                  <div style={styles.adminControlGroup}>
+                    <div style={styles.adminControlLabel}>
+                      <span>Simulated API Latency</span>
+                      <span>{apiDelay}s</span>
+                    </div>
+                    <input 
+                      type="range" 
+                      min="1" 
+                      max="8" 
+                      value={apiDelay} 
+                      onChange={(e) => setApiDelay(Number(e.target.value))}
+                      style={styles.adminRangeInput}
+                    />
+                  </div>
+
+                  <div style={styles.adminControlGroup}>
+                    <label style={{ ...styles.adminControlLabel, marginBottom: '6px' }}>Active Diagnostics Model</label>
+                    <select 
+                      value={activeModel} 
+                      onChange={(e) => setActiveModel(e.target.value)}
+                      style={styles.adminSelect}
+                    >
+                      <option value="Gemini-3.5-Clinician-Pro">Gemini-3.5-Clinician-Pro</option>
+                      <option value="LLaMA-3-Medical-70B">LLaMA-3-Medical-70B</option>
+                      <option value="BioGPT-Clinical-Instruct">BioGPT-Clinical-Instruct</option>
+                    </select>
+                  </div>
+
+                  <button onClick={handleSaveParams} style={styles.adminSaveBtn}>
+                    Apply System Overrides
+                  </button>
+
+                  <AnimatePresence>
+                    {showConsoleSaved && (
+                      <motion.div
+                        initial={{ opacity: 0, y: 5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: 5 }}
+                        style={styles.adminSaveAlert}
+                      >
+                        <Sparkles size={12} style={{ marginRight: 6 }} /> System parameters updated!
+                      </motion.div>
+                    )}
+                  </AnimatePresence>
+                </div>
+              )}
             </div>
           </div>
         </>
@@ -638,6 +741,61 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontSize: '0.8rem',
     fontWeight: 700,
     textAlign: 'right',
+  },
+  adminControlGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '6px',
+    marginBottom: '16px',
+  },
+  adminControlLabel: {
+    fontSize: '0.8rem',
+    fontWeight: 600,
+    color: 'var(--text-secondary)',
+    display: 'flex',
+    justifyContent: 'space-between',
+  },
+  adminRangeInput: {
+    width: '100%',
+    cursor: 'pointer',
+    accentColor: 'var(--accent-purple)',
+  },
+  adminSelect: {
+    width: '100%',
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    border: '1px solid var(--border-primary)',
+    borderRadius: '8px',
+    padding: '8px 12px',
+    color: 'var(--text-primary)',
+    fontSize: '0.8rem',
+    outline: 'none',
+    cursor: 'pointer',
+  },
+  adminSaveBtn: {
+    background: 'linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-cyan) 100%)',
+    border: 'none',
+    color: '#fff',
+    padding: '10px 14px',
+    borderRadius: '8px',
+    fontSize: '0.8rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    width: '100%',
+    marginTop: '10px',
+    transition: 'opacity 0.2s',
+  },
+  adminSaveAlert: {
+    backgroundColor: 'rgba(168,85,247,0.1)',
+    border: '1px solid rgba(168,85,247,0.2)',
+    color: 'var(--accent-purple)',
+    padding: '8px 12px',
+    borderRadius: '8px',
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    marginTop: '12px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
   }
 };
 export default Dashboard;
