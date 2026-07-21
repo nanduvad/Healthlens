@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ArrowRight, ShieldCheck, Sparkles, Activity, ChevronDown, Lock } from 'lucide-react';
+import { ArrowRight, ShieldCheck, Sparkles, Activity, ChevronDown, HeartPulse, Stethoscope, CheckCircle2, Play } from 'lucide-react';
 import { useTheme } from '../components/ThemeContext';
 import { type Role } from '../App';
 
@@ -71,7 +71,7 @@ const AnimatedCounter: React.FC<{ value: number; suffix?: string; duration?: num
   return <span>{count.toLocaleString()}{suffix}</span>;
 };
 
-export const LandingPage: React.FC<LandingPageProps> = ({ onStartAssessment, onViewDashboard, role }) => {
+export const LandingPage: React.FC<LandingPageProps> = ({ onStartAssessment, onViewDashboard }) => {
   const { theme, toggleTheme } = useTheme();
   
   // Custom typing effect for headline
@@ -80,6 +80,62 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartAssessment, onV
     70,
     2500
   );
+
+  // Showcase Slides Carousel
+  const slides = [
+    {
+      title: "AI Symptom Triage Engine",
+      description: "Perform instant 22-symptom triage with precision classification algorithms. Provides real-time low, medium, and high risk stratification.",
+      icon: Sparkles,
+      color: "var(--accent-cyan)",
+      details: [
+        "22 Detailed clinical symptoms",
+        "Multilingual voice dictation parsing",
+        "Offline risk assessment normalizer fallback"
+      ]
+    },
+    {
+      title: "Nurse Intake Assistance",
+      description: "Enables nursing staff to easily perform patient intakes, record vital pre-existing histories, and route assessments to specialized doctor queues.",
+      icon: Stethoscope,
+      color: "var(--accent-emerald)",
+      details: [
+        "Patient-assisted wizard triage",
+        "Direct queue routing controls",
+        "AI-informed routine discharge suggestions"
+      ]
+    },
+    {
+      title: "Doctor Examination Console",
+      description: "Empowers medical doctors to examine patient logs in real-time, write clinical diagnostic logs, and issue secure digital prescriptions.",
+      icon: HeartPulse,
+      color: "var(--accent-rose)",
+      details: [
+        "Queue-item card click interaction",
+        "Medication prescription builder",
+        "Consensus feedback dataset tagging"
+      ]
+    },
+    {
+      title: "Admin Oversight Control",
+      description: "Provides administrators with live facility analytics, custom classifier confidence limits, and model latency simulation overrides.",
+      icon: ShieldCheck,
+      color: "var(--accent-purple)",
+      details: [
+        "Hyperparameter threshold range sliders",
+        "Interactive SVG weekly footfall charts",
+        "Active diagnostics model toggles"
+      ]
+    }
+  ];
+  const [activeSlide, setActiveSlide] = useState(0);
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setActiveSlide((prev) => (prev + 1) % slides.length);
+    }, 5000);
+    return () => clearInterval(timer);
+  }, [slides.length]);
 
   // Testimonials Carousel
   const testimonials = [
@@ -162,8 +218,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartAssessment, onV
         </div>
         <div style={styles.navButtons}>
           <button style={styles.navBtnLink} onClick={onViewDashboard}>
-            {role === 'patient' && <Lock size={12} style={{ marginRight: 6, display: 'inline-block', verticalAlign: 'middle' }} />}
-            Dashboard
+            Clinical Console
           </button>
           <button 
             style={styles.themeToggle} 
@@ -220,8 +275,7 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartAssessment, onV
               style={styles.heroSecondaryBtn}
               onClick={onViewDashboard}
             >
-              {role === 'patient' && <Lock size={14} style={{ marginRight: 6, display: 'inline-block', verticalAlign: 'middle' }} />}
-              View Analytics
+              Clinical Operations
             </motion.button>
           </div>
         </motion.div>
@@ -280,6 +334,106 @@ export const LandingPage: React.FC<LandingPageProps> = ({ onStartAssessment, onV
           <div style={styles.statBox}>
             <h4 style={styles.statNum}><AnimatedCounter value={250} suffix="k+" /></h4>
             <p style={styles.statLabel}>Patients Tracked</p>
+          </div>
+        </div>
+      </section>
+
+      {/* Interactive Feature Showcase Carousel */}
+      <section style={styles.carouselSection}>
+        <div style={styles.carouselHeader}>
+          <span style={styles.carouselBadge}>Interactive Clinical Capabilities</span>
+          <h2 style={styles.sectionTitle}>Full-Desktop Healthcare Suite</h2>
+          <p style={styles.sectionSub}>Explore role-tailored tools designed for Nurses, Doctors, and Administrators.</p>
+        </div>
+
+        <div style={styles.carouselWrapper} className="glass-card">
+          {/* Navigation Tabs */}
+          <div style={styles.carouselTabs}>
+            {slides.map((s, idx) => {
+              const Icon = s.icon;
+              const isActive = activeSlide === idx;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => setActiveSlide(idx)}
+                  style={{
+                    ...styles.carouselTabBtn,
+                    borderColor: isActive ? s.color : 'var(--border-primary)',
+                    backgroundColor: isActive ? 'rgba(255,255,255,0.04)' : 'transparent',
+                  }}
+                >
+                  <Icon size={20} color={s.color} />
+                  <div style={styles.carouselTabInfo}>
+                    <span style={{ ...styles.carouselTabTitle, color: isActive ? 'var(--text-primary)' : 'var(--text-secondary)' }}>
+                      {s.title}
+                    </span>
+                  </div>
+                </button>
+              );
+            })}
+          </div>
+
+          {/* Active Slide Display */}
+          <div style={styles.carouselDisplay}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={activeSlide}
+                initial={{ opacity: 0, x: 20 }}
+                animate={{ opacity: 1, x: 0 }}
+                exit={{ opacity: 0, x: -20 }}
+                transition={{ duration: 0.4 }}
+                style={styles.carouselSlideBody}
+              >
+                <div style={styles.slideLeft}>
+                  <div style={{ ...styles.slideBadge, backgroundColor: `${slides[activeSlide].color}20`, color: slides[activeSlide].color, border: `1px solid ${slides[activeSlide].color}40` }}>
+                    Module {activeSlide + 1} of 4
+                  </div>
+                  <h3 style={styles.slideTitle}>{slides[activeSlide].title}</h3>
+                  <p style={styles.slideDesc}>{slides[activeSlide].description}</p>
+                  
+                  <div style={styles.slideBulletGroup}>
+                    {slides[activeSlide].details.map((detail, dIdx) => (
+                      <div key={dIdx} style={styles.slideBullet}>
+                        <CheckCircle2 size={16} color={slides[activeSlide].color} style={{ marginRight: 8, flexShrink: 0 }} />
+                        <span>{detail}</span>
+                      </div>
+                    ))}
+                  </div>
+
+                  <button style={{ ...styles.slideCtaBtn, background: `linear-gradient(135deg, ${slides[activeSlide].color} 0%, var(--accent-purple) 100%)` }} onClick={onStartAssessment}>
+                    Launch Module <ArrowRight size={16} style={{ marginLeft: 6 }} />
+                  </button>
+                </div>
+
+                <div style={styles.slideRight}>
+                  <div style={styles.mockupGraphic} className="glass-card">
+                    <div style={styles.mockupHeader}>
+                      <span style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#f43f5e' }} />
+                      <span style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#f59e0b' }} />
+                      <span style={{ width: 10, height: 10, borderRadius: '50%', backgroundColor: '#10b981' }} />
+                      <span style={styles.mockupTitle}>{slides[activeSlide].title} - Live Telemetry</span>
+                    </div>
+
+                    <div style={styles.mockupBody}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 16 }}>
+                        <div style={{ padding: 10, borderRadius: 12, backgroundColor: `${slides[activeSlide].color}20` }}>
+                          {React.createElement(slides[activeSlide].icon, { size: 28, color: slides[activeSlide].color })}
+                        </div>
+                        <div>
+                          <div style={{ fontSize: '0.9rem', fontWeight: 700 }}>System Active</div>
+                          <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>Role-aware intelligence engine operating at optimal accuracy</div>
+                        </div>
+                      </div>
+
+                      <div style={{ height: 140, borderRadius: 12, background: 'rgba(0,0,0,0.3)', border: '1px solid var(--border-primary)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexDirection: 'column', gap: 8 }}>
+                        <Play size={28} color={slides[activeSlide].color} />
+                        <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Interactive Workflow Showcase</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </motion.div>
+            </AnimatePresence>
           </div>
         </div>
       </section>
@@ -374,11 +528,149 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    padding: '0 24px',
-    maxWidth: '1200px',
+    padding: '0 48px',
+    width: '100%',
+    maxWidth: '1600px',
     margin: '0 auto',
     position: 'relative',
     zIndex: 2,
+  },
+  carouselSection: {
+    width: '100%',
+    margin: '60px 0',
+  },
+  carouselHeader: {
+    textAlign: 'center',
+    marginBottom: '32px',
+  },
+  carouselBadge: {
+    fontSize: '0.8rem',
+    fontWeight: 700,
+    textTransform: 'uppercase',
+    letterSpacing: '0.08em',
+    color: 'var(--accent-cyan)',
+    backgroundColor: 'rgba(6, 182, 212, 0.1)',
+    border: '1px solid rgba(6, 182, 212, 0.2)',
+    padding: '4px 12px',
+    borderRadius: '20px',
+    display: 'inline-block',
+    marginBottom: '12px',
+  },
+  carouselWrapper: {
+    width: '100%',
+    padding: '32px',
+    borderRadius: '24px',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '24px',
+  },
+  carouselTabs: {
+    display: 'grid',
+    gridTemplateColumns: 'repeat(4, 1fr)',
+    gap: '16px',
+  },
+  carouselTabBtn: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '12px',
+    padding: '16px',
+    borderRadius: '16px',
+    border: '1px solid var(--border-primary)',
+    cursor: 'pointer',
+    textAlign: 'left',
+    transition: 'all 0.3s ease',
+  },
+  carouselTabInfo: {
+    display: 'flex',
+    flexDirection: 'column',
+  },
+  carouselTabTitle: {
+    fontSize: '0.9rem',
+    fontWeight: 700,
+  },
+  carouselDisplay: {
+    marginTop: '16px',
+    minHeight: '340px',
+  },
+  carouselSlideBody: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '40px',
+    alignItems: 'center',
+  },
+  slideLeft: {
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-start',
+    gap: '16px',
+  },
+  slideBadge: {
+    fontSize: '0.75rem',
+    fontWeight: 700,
+    padding: '4px 10px',
+    borderRadius: '12px',
+  },
+  slideTitle: {
+    fontSize: '1.8rem',
+    fontWeight: 800,
+    color: 'var(--text-primary)',
+  },
+  slideDesc: {
+    fontSize: '1rem',
+    color: 'var(--text-secondary)',
+    lineHeight: 1.6,
+  },
+  slideBulletGroup: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    margin: '8px 0',
+  },
+  slideBullet: {
+    display: 'flex',
+    alignItems: 'center',
+    fontSize: '0.9rem',
+    color: 'var(--text-primary)',
+  },
+  slideCtaBtn: {
+    border: 'none',
+    color: '#fff',
+    padding: '12px 24px',
+    borderRadius: '12px',
+    fontSize: '0.9rem',
+    fontWeight: 700,
+    cursor: 'pointer',
+    display: 'inline-flex',
+    alignItems: 'center',
+    boxShadow: 'var(--glow-cyan)',
+    transition: 'opacity 0.2s',
+  },
+  slideRight: {
+    width: '100%',
+  },
+  mockupGraphic: {
+    width: '100%',
+    borderRadius: '20px',
+    padding: '16px',
+    border: '1px solid var(--border-primary)',
+    backgroundColor: 'rgba(9, 13, 22, 0.6)',
+  },
+  mockupHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '6px',
+    paddingBottom: '12px',
+    marginBottom: '16px',
+    borderBottom: '1px solid var(--border-primary)',
+  },
+  mockupTitle: {
+    fontSize: '0.75rem',
+    fontWeight: 600,
+    color: 'var(--text-muted)',
+    marginLeft: 'auto',
+  },
+  mockupBody: {
+    padding: '12px',
   },
   header: {
     width: '100%',

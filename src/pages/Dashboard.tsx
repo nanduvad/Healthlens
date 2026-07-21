@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Clock, Trash2, Home, Inbox, Plus, HelpCircle, Lock, Settings, Sparkles } from 'lucide-react';
+import { Activity, Clock, Trash2, Home, Inbox, Plus, HelpCircle, Settings, Sparkles, Send, CheckCircle2, HeartPulse, Pill, X, Bot } from 'lucide-react';
 import { getPatients, getAnalytics, type AnalyticsPayload, type TriageLog } from '../services/api';
 import { type Role } from '../App';
 
@@ -26,6 +26,95 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
   const handleSaveParams = () => {
     setShowConsoleSaved(true);
     setTimeout(() => setShowConsoleSaved(false), 2000);
+  };
+
+  // Doctor Exam & Prescription Modal State
+  const [selectedPatientForExam, setSelectedPatientForExam] = useState<TriageLog | null>(null);
+  const [examNotes, setExamNotes] = useState('');
+  const [medName, setMedName] = useState('Paracetamol 500mg');
+  const [medDosage, setMedDosage] = useState('1 tablet twice daily after meals');
+  const [medDuration, setMedDuration] = useState('5 Days');
+  const [prescriptionIssued, setPrescriptionIssued] = useState(false);
+
+  // Chatbot Assistant State
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const [chatInput, setChatInput] = useState('');
+  const [chatMessages, setChatMessages] = useState<Array<{ sender: 'user' | 'bot'; text: string }>>([
+    {
+      sender: 'bot',
+      text: `Hello! I am your Healthlens AI Assistant operating under the ${role.toUpperCase()} role. How can I assist your clinical workflow today?`
+    }
+  ]);
+
+  const roleFaqs = {
+    nurse: [
+      {
+        q: "How do I dispatch a patient to Doctor Queue?",
+        a: "To route a patient, view the patient card in the Queue and click Dr. Room 101/102. This dispatches the patient immediately."
+      },
+      {
+        q: "What symptoms trigger High Urgency?",
+        a: "Chest Pain, Shortness of Breath, Severe Headache with Neurological signs trigger High Urgency."
+      },
+      {
+        q: "How to register pre-existing conditions?",
+        a: "During the Nurse Triage Wizard (Step 2), check all relevant conditions like Hypertension or BP."
+      }
+    ],
+    doctor: [
+      {
+        q: "How do I issue a digital prescription?",
+        a: "Click 'Examine & Prescribe' on any patient card in the queue, fill notes, select medication details, and submit."
+      },
+      {
+        q: "Where do I find high-risk immediate cases?",
+        a: "Filter the queue list by 'High' risk level at the top filter bar."
+      },
+      {
+        q: "How to log clinical consensus feedback?",
+        a: "Feedback retrains the classifier weights. You can view logs in the database console."
+      }
+    ],
+    admin: [
+      {
+        q: "How to adjust triage confidence thresholds?",
+        a: "Use the 'Confidence Limit' range slider in the Admin Config Console widget on the right sidebar."
+      },
+      {
+        q: "How to change active diagnostic models?",
+        a: "Select your desired backend medical model (e.g. Gemini-3.5-Clinician-Pro) in the dropdown."
+      },
+      {
+        q: "Where can I view weekly footfall stats?",
+        a: "The 'Weekly Patient Footfall' SVG bar chart displays daily intake counts."
+      }
+    ]
+  };
+
+  const handleSendChatMessage = (textToSend?: string) => {
+    const query = textToSend || chatInput;
+    if (!query.trim()) return;
+
+    const userMsg = { sender: 'user' as const, text: query };
+    setChatMessages((prev) => [...prev, userMsg]);
+    if (!textToSend) setChatInput('');
+
+    setTimeout(() => {
+      let botResponse = `As a ${role.toUpperCase()}, you can utilize Healthlens AI's clinical automation pathways.`;
+      
+      const matchedFaq = roleFaqs[role].find(f => f.q.toLowerCase() === query.toLowerCase());
+      if (matchedFaq) {
+        botResponse = matchedFaq.a;
+      } else if (query.toLowerCase().includes('prescript') || query.toLowerCase().includes('medicine')) {
+        botResponse = "Doctors can issue digital prescriptions by clicking on any patient card in the queue. Prescriptions are saved with encrypted digital signatures.";
+      } else if (query.toLowerCase().includes('queue') || query.toLowerCase().includes('dispatch')) {
+        botResponse = "Nurses can dispatch patients directly to the doctor queue or mark them for routine self-care discharge.";
+      } else if (query.toLowerCase().includes('admin') || query.toLowerCase().includes('model') || query.toLowerCase().includes('confidence')) {
+        botResponse = "Administrators can tweak confidence limits and model latency in the Admin Config Console widget.";
+      }
+
+      setChatMessages((prev) => [...prev, { sender: 'bot', text: botResponse }]);
+    }, 400);
   };
 
   const fetchDashboardData = async () => {
@@ -104,24 +193,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
     }
   } as const;
 
-  if (role === 'patient') {
-    return (
-      <div style={styles.container}>
-        <div style={styles.emptyState} className="glass-card">
-          <div style={styles.emptyIcon}>
-            <Lock size={48} color="var(--accent-rose)" />
-          </div>
-          <h4 style={styles.emptyTitle}>Access Denied</h4>
-          <p style={styles.emptyText}>
-            You do not have permission to view the clinical operations dashboard.
-          </p>
-          <button style={styles.emptyActionBtn} onClick={onBackHome}>
-            Return Home
-          </button>
-        </div>
-      </div>
-    );
-  }
+  // legacy patient access check removed
 
   return (
     <div style={styles.container}>
@@ -275,6 +347,81 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
                             <div style={styles.confidenceChip}>
                               Consensus Confidence: {item.confidence}%
                             </div>
+
+                            {/* Doctor Examine Shortcut */}
+                            {role === 'doctor' && (
+                              <button
+                                onClick={() => setSelectedPatientForExam(item)}
+                                style={{
+                                  marginTop: '12px',
+                                  padding: '8px 16px',
+                                  borderRadius: '8px',
+                                  border: '1px solid rgba(244,63,94,0.2)',
+                                  backgroundColor: 'rgba(244,63,94,0.06)',
+                                  color: 'var(--accent-rose)',
+                                  fontSize: '0.8rem',
+                                  fontWeight: 700,
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '6px'
+                                }}
+                              >
+                                <HeartPulse size={12} /> Examine & Prescribe
+                              </button>
+                            )}
+
+                            {/* Nurse Queue Dispatcher controls */}
+                            {role === 'nurse' && (
+                              <div style={{ display: 'flex', gap: '8px', marginTop: '12px', alignItems: 'center', width: '100%' }}>
+                                <button
+                                  onClick={() => alert(`Patient ${item.id} routed to Doctor Room 101`)}
+                                  style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid var(--accent-cyan)',
+                                    backgroundColor: 'transparent',
+                                    color: 'var(--accent-cyan)',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 600,
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  Dr. Room 101
+                                </button>
+                                <button
+                                  onClick={() => alert(`Patient ${item.id} routed to Doctor Room 102`)}
+                                  style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid var(--accent-cyan)',
+                                    backgroundColor: 'transparent',
+                                    color: 'var(--accent-cyan)',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 600,
+                                    cursor: 'pointer'
+                                  }}
+                                >
+                                  Dr. Room 102
+                                </button>
+                                <button
+                                  onClick={() => alert(`Patient ${item.id} marked as Routine Discharge`)}
+                                  style={{
+                                    padding: '6px 12px',
+                                    borderRadius: '6px',
+                                    border: '1px solid var(--accent-emerald)',
+                                    backgroundColor: 'transparent',
+                                    color: 'var(--accent-emerald)',
+                                    fontSize: '0.75rem',
+                                    fontWeight: 600,
+                                    cursor: 'pointer',
+                                    marginLeft: 'auto'
+                                  }}
+                                >
+                                  Discharge
+                                </button>
+                              </div>
+                            )}
                           </div>
                         </motion.div>
                       );
@@ -431,6 +578,267 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
           </div>
         </>
       )}
+
+      {/* Doctor Examination & Prescription Modal */}
+      <AnimatePresence>
+        {selectedPatientForExam && (
+          <div style={styles.modalOverlay}>
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              animate={{ opacity: 1, scale: 1 }}
+              exit={{ opacity: 0, scale: 0.95 }}
+              style={styles.modalContent}
+              className="glass-card"
+            >
+              <div style={styles.modalHeader}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <HeartPulse color="var(--accent-rose)" size={20} />
+                  <h3 style={{ margin: 0 }}>Doctor Examination Console</h3>
+                </div>
+                <button onClick={() => { setSelectedPatientForExam(null); setPrescriptionIssued(false); }} style={styles.closeBtn}>
+                  <X size={18} />
+                </button>
+              </div>
+
+              <div style={styles.modalBody}>
+                {prescriptionIssued ? (
+                  <div style={{ textAlign: 'center', padding: '32px 16px' }}>
+                    <CheckCircle2 size={48} color="var(--accent-emerald)" style={{ marginBottom: '16px' }} />
+                    <h4 style={{ fontSize: '1.25rem', marginBottom: '8px' }}>Prescription Signed & Issued</h4>
+                    <p style={{ color: 'var(--text-secondary)', fontSize: '0.9rem', marginBottom: '24px' }}>
+                      The digital prescription has been logged in the patient's record and securely routed to the clinic pharmacy.
+                    </p>
+                    <button
+                      onClick={() => {
+                        setSelectedPatientForExam(null);
+                        setPrescriptionIssued(false);
+                      }}
+                      style={styles.modalCtaBtn}
+                    >
+                      Close Console
+                    </button>
+                  </div>
+                ) : (
+                  <>
+                    <div style={styles.patientMetaSummary}>
+                      <div><strong>Patient ID:</strong> {selectedPatientForExam.id}</div>
+                      <div><strong>Age:</strong> {selectedPatientForExam.age}</div>
+                      <div>
+                        <strong>Risk Level:</strong> 
+                        <span style={{ marginLeft: 6, padding: '2px 8px', borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.06)', color: 'var(--accent-cyan)' }}>
+                          {selectedPatientForExam.triageLevel}
+                        </span>
+                      </div>
+                    </div>
+
+                    <div style={{ marginBottom: '16px' }}>
+                      <strong>Reported Symptoms:</strong>
+                      <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '6px' }}>
+                        {selectedPatientForExam.symptoms.map((s, idx) => (
+                          <span key={idx} style={{ fontSize: '0.75rem', padding: '4px 8px', borderRadius: '4px', backgroundColor: 'rgba(255,255,255,0.04)', border: '1px solid var(--border-primary)' }}>{s}</span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                      <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Clinical Examination Notes</label>
+                      <textarea
+                        placeholder="Enter physical examination findings, symptom duration details, or vital signs..."
+                        value={examNotes}
+                        onChange={(e) => setExamNotes(e.target.value)}
+                        style={{
+                          width: '100%',
+                          height: '80px',
+                          backgroundColor: 'rgba(0,0,0,0.2)',
+                          border: '1px solid var(--border-primary)',
+                          borderRadius: '8px',
+                          padding: '10px',
+                          color: 'var(--text-primary)',
+                          fontSize: '0.85rem',
+                          outline: 'none',
+                          resize: 'none'
+                        }}
+                      />
+                    </div>
+
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid var(--border-primary)', paddingTop: '16px' }}>
+                      <h4 style={{ fontSize: '0.95rem', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Pill size={16} color="var(--accent-rose)" /> Prescription Builder
+                      </h4>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Medication Name</label>
+                          <select
+                            value={medName}
+                            onChange={(e) => setMedName(e.target.value)}
+                            style={{
+                              backgroundColor: 'rgba(0,0,0,0.3)',
+                              border: '1px solid var(--border-primary)',
+                              borderRadius: '6px',
+                              padding: '8px',
+                              color: 'var(--text-primary)',
+                              fontSize: '0.8rem',
+                              cursor: 'pointer',
+                              outline: 'none'
+                            }}
+                          >
+                            <option value="Paracetamol 500mg">Paracetamol 500mg</option>
+                            <option value="Amoxicillin 250mg">Amoxicillin 250mg</option>
+                            <option value="Azithromycin 500mg">Azithromycin 500mg</option>
+                            <option value="Cetirizine 10mg">Cetirizine 10mg</option>
+                            <option value="Omeprazole 20mg">Omeprazole 20mg</option>
+                            <option value="Salbutamol Inhaler">Salbutamol Inhaler</option>
+                          </select>
+                        </div>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                          <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Duration</label>
+                          <input
+                            type="text"
+                            value={medDuration}
+                            onChange={(e) => setMedDuration(e.target.value)}
+                            style={{
+                              backgroundColor: 'rgba(0,0,0,0.3)',
+                              border: '1px solid var(--border-primary)',
+                              borderRadius: '6px',
+                              padding: '8px',
+                              color: 'var(--text-primary)',
+                              fontSize: '0.8rem',
+                              outline: 'none'
+                            }}
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                        <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Dosage & Frequency</label>
+                        <input
+                          type="text"
+                          value={medDosage}
+                          onChange={(e) => setMedDosage(e.target.value)}
+                          style={{
+                            backgroundColor: 'rgba(0,0,0,0.3)',
+                            border: '1px solid var(--border-primary)',
+                            borderRadius: '6px',
+                            padding: '8px',
+                            color: 'var(--text-primary)',
+                            fontSize: '0.8rem',
+                            outline: 'none'
+                          }}
+                        />
+                      </div>
+
+                      <button
+                        onClick={() => {
+                          setPrescriptionIssued(true);
+                          alert(`Prescription for ${selectedPatientForExam.id} has been issued successfully.`);
+                        }}
+                        style={{
+                          backgroundColor: 'var(--accent-rose)',
+                          border: 'none',
+                          color: '#fff',
+                          padding: '12px',
+                          borderRadius: '8px',
+                          fontWeight: 700,
+                          cursor: 'pointer',
+                          fontSize: '0.9rem',
+                          marginTop: '8px'
+                        }}
+                      >
+                        Sign & Issue Prescription
+                      </button>
+                    </div>
+                  </>
+                )}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+
+      {/* Floating Role-Aware AI Assistant Chatbot Panel */}
+      <div style={styles.chatbotWrapper}>
+        <motion.button
+          whileHover={{ scale: 1.05 }}
+          whileTap={{ scale: 0.95 }}
+          onClick={() => setIsChatOpen(!isChatOpen)}
+          style={{
+            ...styles.chatbotToggleBtn,
+            backgroundColor: isChatOpen ? 'var(--accent-rose)' : 'var(--accent-cyan)',
+            boxShadow: isChatOpen ? 'var(--glow-rose)' : 'var(--glow-cyan)'
+          }}
+        >
+          {isChatOpen ? <X size={20} /> : <Bot size={20} />}
+        </motion.button>
+
+        <AnimatePresence>
+          {isChatOpen && (
+            <motion.div
+              initial={{ opacity: 0, y: 20, scale: 0.95 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 20, scale: 0.95 }}
+              style={styles.chatDrawer}
+              className="glass-card"
+            >
+              <div style={styles.chatHeader}>
+                <Bot size={16} color="var(--accent-cyan)" />
+                <span style={{ fontWeight: 700, fontSize: '0.85rem' }}>AI Clinical Assistant</span>
+                <span style={styles.chatRoleBadge}>{role.toUpperCase()}</span>
+              </div>
+
+              <div style={styles.chatHistory}>
+                {chatMessages.map((msg, idx) => (
+                  <div
+                    key={idx}
+                    style={{
+                      ...styles.chatBubble,
+                      alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
+                      backgroundColor: msg.sender === 'user' ? 'rgba(6,182,212,0.1)' : 'rgba(255,255,255,0.03)',
+                      borderColor: msg.sender === 'user' ? 'rgba(6,182,212,0.2)' : 'var(--border-primary)',
+                      color: 'var(--text-primary)',
+                    }}
+                  >
+                    {msg.text}
+                  </div>
+                ))}
+              </div>
+
+              {/* Quick FAQ Section */}
+              <div style={styles.chatFaqContainer}>
+                <span style={{ fontSize: '0.7rem', color: 'var(--text-secondary)', fontWeight: 600, display: 'block', marginBottom: '6px' }}>
+                  Quick Role FAQs:
+                </span>
+                <div style={styles.faqChips}>
+                  {roleFaqs[role].map((faq, fIdx) => (
+                    <button
+                      key={fIdx}
+                      onClick={() => handleSendChatMessage(faq.q)}
+                      style={styles.faqChipBtn}
+                    >
+                      {faq.q}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div style={styles.chatInputRow}>
+                <input
+                  type="text"
+                  placeholder="Ask Clinical Assistant..."
+                  value={chatInput}
+                  onChange={(e) => setChatInput(e.target.value)}
+                  onKeyDown={(e) => e.key === 'Enter' && handleSendChatMessage()}
+                  style={styles.chatInputField}
+                />
+                <button onClick={() => handleSendChatMessage()} style={styles.chatSendBtn}>
+                  <Send size={14} />
+                </button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </div>
     </div>
   );
 };
@@ -796,6 +1204,185 @@ const styles: { [key: string]: React.CSSProperties } = {
     display: 'flex',
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  modalOverlay: {
+    position: 'fixed',
+    top: 0,
+    left: 0,
+    width: '100%',
+    height: '100%',
+    backgroundColor: 'rgba(4,7,18,0.85)',
+    backdropFilter: 'blur(8px)',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 2000,
+  },
+  modalContent: {
+    width: '460px',
+    borderRadius: '24px',
+    padding: '24px',
+    backgroundColor: 'var(--bg-secondary)',
+    border: '1px solid var(--border-primary)',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '16px',
+    boxShadow: 'var(--shadow-primary)',
+  },
+  modalHeader: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    borderBottom: '1px solid var(--border-primary)',
+    paddingBottom: '12px',
+  },
+  closeBtn: {
+    background: 'none',
+    border: 'none',
+    color: 'var(--text-muted)',
+    cursor: 'pointer',
+  },
+  modalBody: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '12px',
+  },
+  patientMetaSummary: {
+    display: 'flex',
+    justifyContent: 'space-between',
+    fontSize: '0.85rem',
+    backgroundColor: 'rgba(255,255,255,0.02)',
+    padding: '10px 14px',
+    borderRadius: '8px',
+    border: '1px solid var(--border-primary)',
+  },
+  modalCtaBtn: {
+    backgroundColor: 'var(--accent-cyan)',
+    border: 'none',
+    color: '#fff',
+    padding: '10px 20px',
+    borderRadius: '8px',
+    fontWeight: 700,
+    cursor: 'pointer',
+    fontSize: '0.9rem',
+  },
+  chatbotWrapper: {
+    position: 'fixed',
+    bottom: '24px',
+    right: '24px',
+    zIndex: 1000,
+    display: 'flex',
+    flexDirection: 'column',
+    alignItems: 'flex-end',
+    gap: '12px',
+  },
+  chatbotToggleBtn: {
+    width: '52px',
+    height: '52px',
+    borderRadius: '50%',
+    border: 'none',
+    color: '#fff',
+    cursor: 'pointer',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    transition: 'all 0.3s ease',
+  },
+  chatDrawer: {
+    width: '320px',
+    height: '420px',
+    borderRadius: '20px',
+    backgroundColor: 'var(--bg-secondary)',
+    border: '1px solid var(--border-primary)',
+    display: 'flex',
+    flexDirection: 'column',
+    padding: '12px',
+    boxShadow: 'var(--shadow-primary)',
+  },
+  chatHeader: {
+    display: 'flex',
+    alignItems: 'center',
+    gap: '8px',
+    borderBottom: '1px solid var(--border-primary)',
+    paddingBottom: '8px',
+    marginBottom: '8px',
+  },
+  chatRoleBadge: {
+    marginLeft: 'auto',
+    fontSize: '0.65rem',
+    fontWeight: 700,
+    padding: '2px 6px',
+    borderRadius: '4px',
+    backgroundColor: 'rgba(6,182,212,0.1)',
+    color: 'var(--accent-cyan)',
+  },
+  chatHistory: {
+    flex: 1,
+    overflowY: 'auto',
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '8px',
+    padding: '4px',
+    marginBottom: '8px',
+  },
+  chatBubble: {
+    fontSize: '0.8rem',
+    padding: '8px 12px',
+    borderRadius: '10px',
+    maxWidth: '85%',
+    border: '1px solid var(--border-primary)',
+    lineHeight: '1.4',
+  },
+  chatFaqContainer: {
+    borderTop: '1px solid var(--border-primary)',
+    paddingTop: '8px',
+    marginBottom: '8px',
+  },
+  faqChips: {
+    display: 'flex',
+    flexDirection: 'column',
+    gap: '4px',
+  },
+  faqChipBtn: {
+    background: 'none',
+    border: '1px solid var(--border-primary)',
+    color: 'var(--text-secondary)',
+    padding: '4px 8px',
+    borderRadius: '6px',
+    fontSize: '0.7rem',
+    textAlign: 'left',
+    cursor: 'pointer',
+    width: '100%',
+    transition: 'all 0.2s',
+    whiteSpace: 'nowrap',
+    overflow: 'hidden',
+    textOverflow: 'ellipsis',
+  },
+  chatInputRow: {
+    display: 'flex',
+    gap: '6px',
+  },
+  chatInputField: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.2)',
+    border: '1px solid var(--border-primary)',
+    borderRadius: '8px',
+    padding: '6px 10px',
+    color: 'var(--text-primary)',
+    fontSize: '0.8rem',
+    outline: 'none',
+  },
+  chatSendBtn: {
+    backgroundColor: 'var(--accent-cyan)',
+    border: 'none',
+    color: '#fff',
+    width: '32px',
+    height: '32px',
+    borderRadius: '8px',
+    display: 'flex',
+    alignItems: 'center',
+    justifyContent: 'center',
+    cursor: 'pointer',
   }
 };
 export default Dashboard;

@@ -9,17 +9,17 @@ import { AILoading } from './pages/AILoading';
 import { ResultPortal } from './pages/ResultPortal';
 import { Dashboard } from './pages/Dashboard';
 import { getNextPatientId, registerPatient, createAssessment, runTriage, type TriageResult } from './services/api';
-import { User, Stethoscope, ShieldCheck, ChevronDown } from 'lucide-react';
+import { Stethoscope, ShieldCheck, ChevronDown, HeartPulse } from 'lucide-react';
 
 type Page = 'landing' | 'wizard' | 'loading' | 'results' | 'dashboard';
 
-export type Role = 'patient' | 'clinician' | 'admin';
+export type Role = 'nurse' | 'doctor' | 'admin';
 
 const AppContent: React.FC = () => {
   const [page, setPage] = useState<Page>('landing');
   const [activePatientId, setActivePatientId] = useState<string>('');
   const [triageResult, setTriageResult] = useState<TriageResult | null>(null);
-  const [role, setRole] = useState<Role>('patient');
+  const [role, setRole] = useState<Role>('nurse');
   const [showRoleDropdown, setShowRoleDropdown] = useState(false);
 
   const handleStartAssessment = () => {
@@ -72,19 +72,10 @@ const AppContent: React.FC = () => {
   };
 
   const handleSaveAssessment = () => {
-    if (role === 'patient') {
-      setPage('landing');
-      alert("Assessment saved successfully! Your diagnostic details have been securely synced to the clinic queue. A clinician will review it shortly.");
-    } else {
-      setPage('dashboard');
-    }
+    setPage('dashboard');
   };
 
   const handleViewDashboard = () => {
-    if (role === 'patient') {
-      alert("Access Denied: The dashboard is restricted to Clinicians and Administrators. Please switch roles at the top-right to access.");
-      return;
-    }
     setPage('dashboard');
   };
 
@@ -132,14 +123,14 @@ const AppContent: React.FC = () => {
             ...styles.roleSwitcherBtn,
             borderColor: role === 'admin' 
               ? 'var(--accent-purple)' 
-              : (role === 'clinician' ? 'var(--accent-cyan)' : 'var(--border-primary)'),
+              : (role === 'doctor' ? 'var(--accent-rose)' : 'var(--accent-cyan)'),
             boxShadow: role === 'admin' 
               ? 'var(--glow-purple)' 
-              : (role === 'clinician' ? 'var(--glow-cyan)' : 'var(--shadow-primary)')
+              : (role === 'doctor' ? 'var(--glow-rose)' : 'var(--glow-cyan)')
           }}
         >
-          {role === 'patient' && <User size={14} color="var(--text-secondary)" />}
-          {role === 'clinician' && <Stethoscope size={14} color="var(--accent-cyan)" />}
+          {role === 'nurse' && <Stethoscope size={14} color="var(--accent-cyan)" />}
+          {role === 'doctor' && <HeartPulse size={14} color="var(--accent-rose)" />}
           {role === 'admin' && <ShieldCheck size={14} color="var(--accent-purple)" />}
           
           <span style={styles.roleLabel}>
@@ -160,16 +151,12 @@ const AppContent: React.FC = () => {
               style={styles.roleDropdown}
               className="glass-card"
             >
-              {(['patient', 'clinician', 'admin'] as const).map((r) => (
+              {(['nurse', 'doctor', 'admin'] as const).map((r) => (
                 <button
                   key={r}
                   onClick={() => {
                     setRole(r);
                     setShowRoleDropdown(false);
-                    // Redirect patient to landing if they are currently on dashboard
-                    if (r === 'patient' && page === 'dashboard') {
-                      setPage('landing');
-                    }
                   }}
                   style={{
                     ...styles.roleOption,
@@ -178,16 +165,16 @@ const AppContent: React.FC = () => {
                   }}
                 >
                   <div style={styles.roleOptionIcon}>
-                    {r === 'patient' && <User size={14} />}
-                    {r === 'clinician' && <Stethoscope size={14} color="var(--accent-cyan)" />}
+                    {r === 'nurse' && <Stethoscope size={14} color="var(--accent-cyan)" />}
+                    {r === 'doctor' && <HeartPulse size={14} color="var(--accent-rose)" />}
                     {r === 'admin' && <ShieldCheck size={14} color="var(--accent-purple)" />}
                   </div>
                   <div style={styles.roleOptionText}>
                     <span style={styles.roleOptionName}>{r.charAt(0).toUpperCase() + r.slice(1)}</span>
                     <span style={styles.roleOptionDesc}>
-                      {r === 'patient' && 'Submit assessments & view results'}
-                      {r === 'clinician' && 'Manage queue & validate feedback'}
-                      {r === 'admin' && 'Full system controls & parameters'}
+                      {r === 'nurse' && 'Intake & triage assessment assistant'}
+                      {r === 'doctor' && 'Examine queue & prescribe medication'}
+                      {r === 'admin' && 'System configuration & analytics overrides'}
                     </span>
                   </div>
                 </button>

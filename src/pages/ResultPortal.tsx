@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { ArrowRight, RefreshCw, CheckCircle2, MessageSquare, ThumbsUp, ThumbsDown, Lock } from 'lucide-react';
+import { ArrowRight, RefreshCw, CheckCircle2, MessageSquare, ThumbsUp, ThumbsDown, Stethoscope, UserCheck, HeartPulse } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { type TriageResult, submitFeedback, updatePatientStatus } from '../services/api';
 import { type Role } from '../App';
@@ -273,8 +273,98 @@ export const ResultPortal: React.FC<ResultPortalProps> = ({ patientId, triageRes
           </div>
         </motion.div>
 
-        {/* Clinician review feedback section */}
-        {role !== 'patient' ? (
+        {/* Role-Specific Action Consoles */}
+        {role === 'nurse' && (
+          <motion.div variants={itemVariants} style={styles.card} className="glass-card">
+            <h3 style={styles.cardTitle}>
+              <Stethoscope size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} color="var(--accent-cyan)" /> 
+              Nurse Action & Dispatch Console
+            </h3>
+            <p style={styles.cardSub}>Review AI outcome recommendation and dispatch patient to appropriate clinical workflow.</p>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '16px' }}>
+              <button
+                onClick={() => {
+                  alert(`Patient ${patientId} dispatched to Doctor Consulting Queue.`);
+                  onSaveAssessment();
+                }}
+                style={{
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: '1px solid var(--accent-rose)',
+                  backgroundColor: 'rgba(244, 63, 94, 0.08)',
+                  color: 'var(--accent-rose)',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <UserCheck size={18} /> Route to Doctor Queue
+              </button>
+
+              <button
+                onClick={() => {
+                  alert(`Patient ${patientId} marked as Routine Care / Self-Home Discharge.`);
+                  onSaveAssessment();
+                }}
+                style={{
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: '1px solid var(--accent-emerald)',
+                  backgroundColor: 'rgba(16, 185, 129, 0.08)',
+                  color: 'var(--accent-emerald)',
+                  fontWeight: 700,
+                  fontSize: '0.95rem',
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  gap: '8px'
+                }}
+              >
+                <CheckCircle2 size={18} /> Discharge / Routine Care
+              </button>
+            </div>
+          </motion.div>
+        )}
+
+        {role === 'doctor' && (
+          <motion.div variants={itemVariants} style={styles.card} className="glass-card">
+            <h3 style={styles.cardTitle}>
+              <HeartPulse size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} color="var(--accent-rose)" /> 
+              Doctor Examination Shortcut
+            </h3>
+            <p style={styles.cardSub}>Examine patient symptoms, enter findings, and write prescriptions directly.</p>
+
+            <button
+              onClick={onSaveAssessment}
+              style={{
+                width: '100%',
+                padding: '16px',
+                borderRadius: '12px',
+                border: 'none',
+                background: 'linear-gradient(135deg, var(--accent-rose) 0%, var(--accent-purple) 100%)',
+                color: '#fff',
+                fontWeight: 700,
+                fontSize: '1rem',
+                cursor: 'pointer',
+                marginTop: '16px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
+            >
+              <HeartPulse size={18} /> Open Patient Examination & Prescription Console
+            </button>
+          </motion.div>
+        )}
+
+        {role === 'admin' && (
           <motion.div variants={itemVariants} style={styles.card} className="glass-card">
             <h3 style={styles.cardTitle}><MessageSquare size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} /> Clinician Validation Review</h3>
             <p style={styles.cardSub}>Record expected outcome telemetry to continuously train and optimize classifier boundaries.</p>
@@ -345,24 +435,6 @@ export const ResultPortal: React.FC<ResultPortalProps> = ({ patientId, triageRes
                 </button>
               </div>
             )}
-          </motion.div>
-        ) : (
-          <motion.div variants={itemVariants} style={styles.card} className="glass-card">
-            <h3 style={styles.cardTitle}><MessageSquare size={18} style={{ marginRight: 8, verticalAlign: 'middle' }} /> Clinician Validation Review</h3>
-            <p style={styles.cardSub}>Clinician feedback pending review. Patient access restricted.</p>
-            <div style={{
-              backgroundColor: 'rgba(255, 255, 255, 0.02)',
-              border: '1px solid var(--border-primary)',
-              borderRadius: '12px',
-              padding: '16px',
-              color: 'var(--text-secondary)',
-              fontSize: '0.9rem',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '10px'
-            }}>
-              <Lock size={16} color="var(--accent-purple)" /> Clinician validation console is only available to Clinicians or Administrators.
-            </div>
           </motion.div>
         )}
 
