@@ -1,0 +1,411 @@
+====================================================================
+PREMIUM UI / UX REQUIREMENTS
+====================================================================
+
+The application should feel like an award-winning AI SaaS product.
+
+Design inspiration:
+
+• Stripe
+• Linear
+• Vercel
+• Raycast
+• Notion
+• Apple
+• Clerk
+• Framer
+• Perplexity AI
+• OpenAI ChatGPT
+
+The UI should immediately impress judges.
+
+Every page must feel alive.
+
+====================================================================
+ANIMATION LIBRARIES
+====================================================================
+
+Use:
+
+• Framer Motion
+• GSAP (only where it adds value)
+• Lenis (smooth scrolling)
+• Lottie React (for loading and empty states)
+
+Avoid excessive animations that reduce performance.
+
+Maintain 60 FPS wherever possible.
+
+====================================================================
+PAGE TRANSITIONS
+====================================================================
+
+Every page transition should include:
+
+• Fade
+• Slide
+• Scale
+
+Use AnimatePresence from Framer Motion.
+
+Transitions should feel smooth and premium.
+
+====================================================================
+LANDING PAGE ANIMATIONS
+====================================================================
+
+Hero section:
+
+• Gradient animated background
+• Floating medical icons
+• Floating AI particles
+• Animated blobs
+• Smooth fade-in content
+• Typing animation for headline
+• Animated CTA buttons
+• Mouse parallax effects
+• Scroll indicator animation
+
+Feature cards:
+
+• Staggered entrance animations
+• Hover lift
+• Glow effect
+• Border animation
+
+Statistics:
+
+• Animated counters
+• Count-up effects
+
+Testimonials:
+
+• Auto sliding carousel
+• Smooth transitions
+
+FAQ:
+
+• Animated accordion
+
+====================================================================
+BACKGROUND EFFECTS
+====================================================================
+
+Create premium backgrounds using:
+
+• Animated gradient mesh
+• Glassmorphism
+• Floating blur circles
+• Noise texture overlay
+• Aurora gradients
+• Soft radial gradients
+
+Background should subtly animate continuously.
+
+====================================================================
+BUTTON ANIMATIONS
+====================================================================
+
+Buttons should include:
+
+• Ripple effect
+• Hover glow
+• Slight scale on hover
+• Spring animation
+• Active press animation
+• Loading spinner
+
+====================================================================
+FORM ANIMATIONS
+====================================================================
+
+Inputs should include:
+
+• Floating labels
+• Smooth border animation
+• Focus glow
+• Success animation
+• Error shake animation
+• Smooth validation transitions
+
+====================================================================
+AI LOADING EXPERIENCE
+====================================================================
+
+When AI is analyzing:
+
+Display a premium loading screen.
+
+Include:
+
+• AI brain animation
+• Rotating medical icons
+• Thinking dots
+• Progress bar
+• Animated text
+
+Example:
+
+Analyzing symptoms...
+
+Checking urgency...
+
+Preparing recommendations...
+
+Generating report...
+
+This should feel like the AI is actively working.
+
+====================================================================
+RESULT PAGE ANIMATIONS
+====================================================================
+
+Animate cards sequentially.
+
+Risk Badge:
+
+Low
+
+Green pulse
+
+Medium
+
+Orange pulse
+
+High
+
+Red breathing pulse
+
+Confidence Bar:
+
+Animated progress
+
+Charts:
+
+Grow animation
+
+Lists:
+
+Fade-in one item at a time
+
+Timeline:
+
+Slide upward
+
+Recommendations:
+
+Appear one by one
+
+====================================================================
+MICRO INTERACTIONS
+====================================================================
+
+Every clickable component should include:
+
+Hover animation
+
+Scale animation
+
+Shadow transition
+
+Smooth cursor feedback
+
+Tooltips
+
+Subtle bounce where appropriate
+
+====================================================================
+ICONS
+====================================================================
+
+Use Lucide React icons.
+
+Icons should animate on hover.
+
+Example:
+
+Heartbeat icon pulses
+
+Shield icon rotates slightly
+
+AI icon glows
+
+Hospital icon bounces
+
+====================================================================
+SCROLL ANIMATIONS
+====================================================================
+
+Animate sections when entering the viewport.
+
+Use:
+
+Fade Up
+
+Fade Left
+
+Fade Right
+
+Zoom In
+
+Stagger Children
+
+Only trigger once.
+
+====================================================================
+DASHBOARD ANIMATIONS
+====================================================================
+
+Analytics cards:
+
+Count-up numbers
+
+Charts:
+
+Animated drawing
+
+Cards:
+
+Slide in
+
+Filters:
+
+Smooth transitions
+
+Timeline:
+
+Animated appearance
+
+====================================================================
+LOADING STATES
+====================================================================
+
+Never display blank pages.
+
+Use skeleton loaders.
+
+Use shimmer effects.
+
+Use animated placeholders.
+
+====================================================================
+EMPTY STATES
+====================================================================
+
+Use beautiful Lottie animations.
+
+Examples:
+
+No assessments
+
+No search results
+
+No analytics
+
+====================================================================
+SUCCESS ANIMATIONS
+====================================================================
+
+After assessment:
+
+Confetti burst (subtle)
+
+Success checkmark animation
+
+Smooth transition to results
+
+Toast notification
+
+====================================================================
+ERROR ANIMATIONS
+====================================================================
+
+Input errors:
+
+Shake animation
+
+API errors:
+
+Animated alert card
+
+Network errors:
+
+Retry animation
+
+====================================================================
+DARK MODE
+====================================================================
+
+Implement smooth dark/light transitions.
+
+Animate theme switching.
+
+Remember user preference.
+
+====================================================================
+RESPONSIVE DESIGN
+====================================================================
+
+The UI must be fully responsive.
+
+Support:
+
+320px
+
+375px
+
+425px
+
+768px
+
+1024px
+
+1280px
+
+1440px
+
+4K displays
+
+Ensure animations remain smooth on mobile.
+
+====================================================================
+ACCESSIBILITY
+====================================================================
+
+Respect prefers-reduced-motion settings.
+
+Maintain keyboard accessibility.
+
+Ensure proper focus states.
+
+Use semantic HTML.
+
+====================================================================
+PERFORMANCE
+====================================================================
+
+Lazy-load routes.
+
+Lazy-load animations.
+
+Optimize images.
+
+Avoid layout shifts.
+
+Target Lighthouse scores:
+
+Performance > 90
+
+Accessibility > 95
+
+Best Practices > 95
+
+SEO > 90
+
+====================================================================
+FINAL UI GOAL
+====================================================================
+
+The application should feel polished enough that judges immediately perceive it as a premium, production-quality AI healthcare platform.
+
+Animations should enhance usability and storytelling, not distract from the experience. Prioritize smoothness, consistency, and responsiveness throughout the application.
