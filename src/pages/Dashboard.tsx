@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Activity, Clock, Trash2, Home, Inbox, Plus, HelpCircle, Settings, Sparkles, Send, CheckCircle2, HeartPulse, Pill, X, Bot } from 'lucide-react';
+import { Activity, Clock, Trash2, Home, Inbox, Plus, HelpCircle, Settings, Sparkles, Send, CheckCircle2, HeartPulse, Pill, X, Bot, Volume2, Mic, FileText } from 'lucide-react';
 import { getPatients, getAnalytics, type AnalyticsPayload, type TriageLog } from '../services/api';
 import { type Role } from '../App';
 
@@ -35,6 +35,18 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
   const [medDosage, setMedDosage] = useState('1 tablet twice daily after meals');
   const [medDuration, setMedDuration] = useState('5 Days');
   const [prescriptionIssued, setPrescriptionIssued] = useState(false);
+  const [activeExamTab, setActiveExamTab] = useState<'exam' | 'copilot' | 'prescription'>('exam');
+
+  const icd10Mappings: Record<string, { code: string; diagnosis: string; guidelines: string }> = {
+    'Chest Pain': { code: 'I20.9', diagnosis: 'Angina Pectoris, unspecified', guidelines: 'Order emergency ECG and cardiac enzymes. Monitor BP continuously. Prepare IV access.' },
+    'Shortness of Breath': { code: 'R06.02', diagnosis: 'Dyspnea, unspecified', guidelines: 'Monitor SpO2. Administer oxygen therapy if saturation falls below 94%. Check for wheezing.' },
+    'Severe Headache': { code: 'R51.9', diagnosis: 'Headache, unspecified', guidelines: 'Perform cranial neurological exam. Check pupillary reflex. Keep patient in a quiet, dark environment.' },
+    'Fever & Chills': { code: 'R50.9', diagnosis: 'Fever, unspecified', guidelines: 'Administer antipyretics (e.g. Paracetamol). Maintain oral hydration. Monitor core temperature hourly.' },
+    'Abdominal Pain': { code: 'R10.9', diagnosis: 'Abdominal pain, unspecified', guidelines: 'Palpate abdomen for tenderness, guarding or rigidity. Check for localized pain in RLQ (McBurney\'s point).' },
+    'Cough': { code: 'R05.9', diagnosis: 'Cough, unspecified', guidelines: 'Auscultate lungs for crackles or wheezing. Consider prescribing antitussives or bronchodilators.' },
+    'Sore Throat': { code: 'J02.9', diagnosis: 'Acute pharyngitis, unspecified', guidelines: 'Perform throat swab. Inspect tonsils for exudates. Recommend warm saline gargles.' },
+    'Palpitations': { code: 'R00.2', diagnosis: 'Palpitations', guidelines: 'Check radial pulse. Connect patient to telemetry monitor if heart rate fluctuates above 100 BPM.' },
+  };
 
   // Chatbot Assistant State
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -45,6 +57,37 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
       text: `Hello! I am your Healthlens AI Assistant operating under the ${role.toUpperCase()} role. How can I assist your clinical workflow today?`
     }
   ]);
+  const [isListeningSpeech, setIsListeningSpeech] = useState(false);
+
+  const handleStartSpeechRecognition = () => {
+    const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser.");
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-US';
+    recognition.interimResults = false;
+    
+    recognition.onstart = () => {
+      setIsListeningSpeech(true);
+    };
+    
+    recognition.onend = () => {
+      setIsListeningSpeech(false);
+    };
+    
+    recognition.onerror = () => {
+      setIsListeningSpeech(false);
+    };
+    
+    recognition.onresult = (event: any) => {
+      const text = event.results[0][0].transcript;
+      setChatInput(text);
+    };
+    
+    recognition.start();
+  };
 
   const roleFaqs = {
     nurse: [
@@ -254,6 +297,44 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
               <span style={styles.metricNumber}>{analytics?.metrics?.accuracy || 94}%</span>
               <span style={styles.metricSubtitle}>Validation match rate</span>
             </motion.div>
+
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} transition={{ delay: 0.3 }} style={styles.metricCard} className="glass-card">
+              <div style={styles.metricHeader}>
+                <span style={styles.metricTitle}>Est. Queue Wait Time</span>
+                <Clock size={18} color="var(--accent-cyan)" />
+              </div>
+              <span style={{ ...styles.metricNumber, color: (totalLogs * 8) > 30 ? 'var(--accent-rose)' : 'var(--accent-emerald)' }}>
+                {totalLogs * 8} mins
+              </span>
+              <span style={styles.metricSubtitle}>
+                {(totalLogs * 8) > 30 ? "⚠️ High intake latency" : "⚡ Optimal queue intake"}
+              </span>
+            </motion.div>
+          </div>
+
+          {/* Live Consult Room Occupancy Grid */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '16px', marginBottom: '40px' }}>
+            {[
+              { room: 'Consult Room 101', doc: 'Dr. Jenkins', status: 'In Consultation', color: 'var(--accent-rose)', active: true },
+              { room: 'Consult Room 102', doc: 'Dr. Chang', status: 'Available', color: 'var(--accent-emerald)', active: false },
+              { room: 'Consult Room 103', doc: 'Dr. Rostova', status: 'In Consultation', color: 'var(--accent-rose)', active: true },
+              { room: 'Triage Room 104', doc: 'Nurse Intake', status: 'Active Intake', color: 'var(--accent-cyan)', active: true },
+            ].map((r, idx) => (
+              <div key={idx} className="glass-card" style={{ padding: '16px', borderRadius: '16px', border: '1px solid var(--border-primary)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)' }}>{r.room}</span>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '0.9rem', fontWeight: 700, color: 'var(--text-primary)' }}>{r.doc}</span>
+                  <span style={{
+                    width: 8,
+                    height: 8,
+                    borderRadius: '50%',
+                    backgroundColor: r.active ? r.color : 'rgba(255,255,255,0.2)',
+                    boxShadow: r.active ? `0 0 10px ${r.color}` : 'none'
+                  }} />
+                </div>
+                <span style={{ fontSize: '0.75rem', color: r.active ? r.color : 'var(--text-secondary)' }}>{r.status}</span>
+              </div>
+            ))}
           </div>
 
           <div style={styles.mainLayout}>
@@ -640,115 +721,273 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
                       </div>
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
-                      <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Clinical Examination Notes</label>
-                      <textarea
-                        placeholder="Enter physical examination findings, symptom duration details, or vital signs..."
-                        value={examNotes}
-                        onChange={(e) => setExamNotes(e.target.value)}
-                        style={{
-                          width: '100%',
-                          height: '80px',
-                          backgroundColor: 'rgba(0,0,0,0.2)',
-                          border: '1px solid var(--border-primary)',
-                          borderRadius: '8px',
-                          padding: '10px',
-                          color: 'var(--text-primary)',
-                          fontSize: '0.85rem',
-                          outline: 'none',
-                          resize: 'none'
-                        }}
-                      />
+                    {/* Examination Tabs Switcher */}
+                    <div style={{ display: 'flex', borderBottom: '1px solid var(--border-primary)', marginBottom: '16px' }}>
+                      {[
+                        { id: 'exam', label: '1. Examine & Prescribe' },
+                        { id: 'copilot', label: '2. AI Co-Pilot' },
+                        { id: 'prescription', label: '3. Slip Preview' }
+                      ].map((t) => (
+                        <button
+                          key={t.id}
+                          onClick={() => setActiveExamTab(t.id as any)}
+                          style={{
+                            flex: 1,
+                            padding: '10px 4px',
+                            background: 'none',
+                            border: 'none',
+                            borderBottom: activeExamTab === t.id ? '2px solid var(--accent-rose)' : 'none',
+                            color: activeExamTab === t.id ? 'var(--accent-rose)' : 'var(--text-secondary)',
+                            fontWeight: 700,
+                            fontSize: '0.8rem',
+                            cursor: 'pointer',
+                            textAlign: 'center'
+                          }}
+                        >
+                          {t.label}
+                        </button>
+                      ))}
                     </div>
 
-                    <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid var(--border-primary)', paddingTop: '16px' }}>
-                      <h4 style={{ fontSize: '0.95rem', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Pill size={16} color="var(--accent-rose)" /> Prescription Builder
-                      </h4>
-
-                      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Medication Name</label>
-                          <select
-                            value={medName}
-                            onChange={(e) => setMedName(e.target.value)}
+                    {activeExamTab === 'exam' && (
+                      <>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginBottom: '16px' }}>
+                          <label style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)' }}>Clinical Examination Notes</label>
+                          <textarea
+                            placeholder="Enter physical examination findings, symptom duration details, or vital signs..."
+                            value={examNotes}
+                            onChange={(e) => setExamNotes(e.target.value)}
                             style={{
-                              backgroundColor: 'rgba(0,0,0,0.3)',
+                              width: '100%',
+                              height: '80px',
+                              backgroundColor: 'rgba(0,0,0,0.2)',
                               border: '1px solid var(--border-primary)',
-                              borderRadius: '6px',
-                              padding: '8px',
+                              borderRadius: '8px',
+                              padding: '10px',
                               color: 'var(--text-primary)',
-                              fontSize: '0.8rem',
-                              cursor: 'pointer',
-                              outline: 'none'
-                            }}
-                          >
-                            <option value="Paracetamol 500mg">Paracetamol 500mg</option>
-                            <option value="Amoxicillin 250mg">Amoxicillin 250mg</option>
-                            <option value="Azithromycin 500mg">Azithromycin 500mg</option>
-                            <option value="Cetirizine 10mg">Cetirizine 10mg</option>
-                            <option value="Omeprazole 20mg">Omeprazole 20mg</option>
-                            <option value="Salbutamol Inhaler">Salbutamol Inhaler</option>
-                          </select>
-                        </div>
-
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                          <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Duration</label>
-                          <input
-                            type="text"
-                            value={medDuration}
-                            onChange={(e) => setMedDuration(e.target.value)}
-                            style={{
-                              backgroundColor: 'rgba(0,0,0,0.3)',
-                              border: '1px solid var(--border-primary)',
-                              borderRadius: '6px',
-                              padding: '8px',
-                              color: 'var(--text-primary)',
-                              fontSize: '0.8rem',
-                              outline: 'none'
+                              fontSize: '0.85rem',
+                              outline: 'none',
+                              resize: 'none'
                             }}
                           />
                         </div>
-                      </div>
 
-                      <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-                        <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Dosage & Frequency</label>
-                        <input
-                          type="text"
-                          value={medDosage}
-                          onChange={(e) => setMedDosage(e.target.value)}
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderTop: '1px solid var(--border-primary)', paddingTop: '16px' }}>
+                          <h4 style={{ fontSize: '0.95rem', margin: 0, display: 'flex', alignItems: 'center', gap: '6px' }}>
+                            <Pill size={16} color="var(--accent-rose)" /> Prescription Builder
+                          </h4>
+
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Medication Name</label>
+                              <select
+                                value={medName}
+                                onChange={(e) => setMedName(e.target.value)}
+                                style={{
+                                  backgroundColor: 'rgba(0,0,0,0.3)',
+                                  border: '1px solid var(--border-primary)',
+                                  borderRadius: '6px',
+                                  padding: '8px',
+                                  color: 'var(--text-primary)',
+                                  fontSize: '0.8rem',
+                                  cursor: 'pointer',
+                                  outline: 'none'
+                                }}
+                              >
+                                <option value="Paracetamol 500mg">Paracetamol 500mg</option>
+                                <option value="Amoxicillin 250mg">Amoxicillin 250mg</option>
+                                <option value="Azithromycin 500mg">Azithromycin 500mg</option>
+                                <option value="Cetirizine 10mg">Cetirizine 10mg</option>
+                                <option value="Omeprazole 20mg">Omeprazole 20mg</option>
+                                <option value="Salbutamol Inhaler">Salbutamol Inhaler</option>
+                              </select>
+                            </div>
+
+                            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                              <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Duration</label>
+                              <input
+                                type="text"
+                                value={medDuration}
+                                onChange={(e) => setMedDuration(e.target.value)}
+                                style={{
+                                  backgroundColor: 'rgba(0,0,0,0.3)',
+                                  border: '1px solid var(--border-primary)',
+                                  borderRadius: '6px',
+                                  padding: '8px',
+                                  color: 'var(--text-primary)',
+                                  fontSize: '0.8rem',
+                                  outline: 'none'
+                                }}
+                              />
+                            </div>
+                          </div>
+
+                          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+                            <label style={{ fontSize: '0.75rem', color: 'var(--text-secondary)' }}>Dosage & Frequency</label>
+                            <input
+                              type="text"
+                              value={medDosage}
+                              onChange={(e) => setMedDosage(e.target.value)}
+                              style={{
+                                backgroundColor: 'rgba(0,0,0,0.3)',
+                                border: '1px solid var(--border-primary)',
+                                borderRadius: '6px',
+                                padding: '8px',
+                                color: 'var(--text-primary)',
+                                fontSize: '0.8rem',
+                                outline: 'none'
+                              }}
+                            />
+                          </div>
+
+                          <button
+                            onClick={() => {
+                              setPrescriptionIssued(true);
+                              alert(`Prescription for ${selectedPatientForExam.id} has been issued successfully.`);
+                            }}
+                            style={{
+                              backgroundColor: 'var(--accent-rose)',
+                              border: 'none',
+                              color: '#fff',
+                              padding: '12px',
+                              borderRadius: '8px',
+                              fontWeight: 700,
+                              cursor: 'pointer',
+                              fontSize: '0.9rem',
+                              marginTop: '8px'
+                            }}
+                          >
+                            Sign & Issue Prescription
+                          </button>
+                        </div>
+                      </>
+                    )}
+
+                    {activeExamTab === 'copilot' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <h4 style={{ fontSize: '0.95rem', margin: 0, display: 'flex', alignItems: 'center', gap: '6px', color: 'var(--accent-cyan)' }}>
+                          <Sparkles size={16} /> AI Co-Pilot Diagnostics & ICD-10 Matcher
+                        </h4>
+                        <p style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', margin: 0 }}>
+                          Automated mapping of active symptom signatures to ICD-10 medical terminology database rows.
+                        </p>
+
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto', paddingRight: '4px' }}>
+                          {selectedPatientForExam.symptoms.map((sym) => {
+                            const match = icd10Mappings[sym] || { code: 'U07.1', diagnosis: 'Unspecified Symptom Signature', guidelines: 'Evaluate general physiological parameters. Consult primary care pathways.' };
+                            return (
+                              <div key={sym} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-primary)', borderRadius: '8px', padding: '10px' }}>
+                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                                  <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>{sym}</span>
+                                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-cyan)', backgroundColor: 'rgba(6,182,212,0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                                    ICD-10: {match.code}
+                                  </span>
+                                </div>
+                                <div style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--text-secondary)', marginBottom: '4px' }}>{match.diagnosis}</div>
+                                <div style={{ fontSize: '0.7rem', color: 'var(--text-muted)' }}>{match.guidelines}</div>
+                              </div>
+                            );
+                          })}
+                        </div>
+
+                        {/* Telemetry Vitals summary in Co-Pilot */}
+                        <div style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-primary)', borderRadius: '10px', padding: '12px' }}>
+                          <span style={{ fontSize: '0.75rem', fontWeight: 700, display: 'block', marginBottom: '8px', color: 'var(--text-primary)' }}>
+                            Vitals Log Telemetry
+                          </span>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.75rem', color: 'var(--text-secondary)' }}>
+                            <div>🌡️ Temp: <strong style={{ color: 'var(--text-primary)' }}>98.6 °F</strong></div>
+                            <div>❤️ HR: <strong style={{ color: 'var(--text-primary)' }}>72 BPM</strong></div>
+                            <div>⚡ SpO2: <strong style={{ color: 'var(--text-primary)' }}>98%</strong></div>
+                            <div>🩸 BP: <strong style={{ color: 'var(--text-primary)' }}>120/80 mmHg</strong></div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeExamTab === 'prescription' && (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div 
+                          id="prescription-print-area"
                           style={{
-                            backgroundColor: 'rgba(0,0,0,0.3)',
-                            border: '1px solid var(--border-primary)',
-                            borderRadius: '6px',
-                            padding: '8px',
-                            color: 'var(--text-primary)',
-                            fontSize: '0.8rem',
-                            outline: 'none'
+                            backgroundColor: '#fff',
+                            color: '#1a1a1a',
+                            padding: '20px',
+                            borderRadius: '12px',
+                            border: '2px solid #ccc',
+                            fontFamily: 'serif',
+                            boxShadow: '0 4px 6px rgba(0,0,0,0.1)'
                           }}
-                        />
-                      </div>
+                        >
+                          <div style={{ textAlign: 'center', borderBottom: '2px solid #1a1a1a', paddingBottom: '10px', marginBottom: '12px' }}>
+                            <h3 style={{ margin: '0 0 4px 0', fontSize: '1.2rem', fontWeight: 800, textTransform: 'uppercase', color: '#111' }}>
+                              Healthlens Medical Center
+                            </h3>
+                            <span style={{ fontSize: '0.7rem', textTransform: 'uppercase', letterSpacing: '1px' }}>
+                              Clinical Outpatient Triage & Prescription Slip
+                            </span>
+                          </div>
 
-                      <button
-                        onClick={() => {
-                          setPrescriptionIssued(true);
-                          alert(`Prescription for ${selectedPatientForExam.id} has been issued successfully.`);
-                        }}
-                        style={{
-                          backgroundColor: 'var(--accent-rose)',
-                          border: 'none',
-                          color: '#fff',
-                          padding: '12px',
-                          borderRadius: '8px',
-                          fontWeight: 700,
-                          cursor: 'pointer',
-                          fontSize: '0.9rem',
-                          marginTop: '8px'
-                        }}
-                      >
-                        Sign & Issue Prescription
-                      </button>
-                    </div>
+                          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.75rem', marginBottom: '12px', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>
+                            <div><strong>Patient ID:</strong> {selectedPatientForExam.id}</div>
+                            <div><strong>Age / Sex:</strong> {selectedPatientForExam.age} / Female</div>
+                            <div><strong>Date:</strong> {new Date().toLocaleDateString()}</div>
+                            <div><strong>Triage Level:</strong> {selectedPatientForExam.triageLevel}</div>
+                          </div>
+
+                          <div style={{ fontSize: '1.4rem', fontWeight: 800, margin: '8px 0', fontFamily: 'sans-serif' }}>
+                            Rx
+                          </div>
+
+                          <div style={{ minHeight: '60px', borderLeft: '3px solid #1a1a1a', paddingLeft: '10px', margin: '8px 0', fontSize: '0.85rem' }}>
+                            <strong>{medName}</strong>
+                            <div style={{ fontSize: '0.75rem', color: '#555', marginTop: '4px' }}>
+                              Dosage: {medDosage} | Duration: {medDuration}
+                            </div>
+                          </div>
+
+                          <div style={{ marginTop: '24px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+                            <div style={{ fontSize: '0.65rem', color: '#777' }}>
+                              Digitally Verified by Healthlens AI Classifier
+                            </div>
+                            <div style={{ textAlign: 'center', borderTop: '1px solid #1a1a1a', width: '120px', paddingTop: '4px', fontSize: '0.75rem' }}>
+                              Doctor Signature
+                            </div>
+                          </div>
+                        </div>
+
+                        <button 
+                          onClick={() => {
+                            const printContent = document.getElementById('prescription-print-area')?.innerHTML;
+                            const originalContent = document.body.innerHTML;
+                            if (printContent) {
+                              document.body.innerHTML = printContent;
+                              window.print();
+                              document.body.innerHTML = originalContent;
+                              // Force a page reload to restore state safely
+                              window.location.reload();
+                            }
+                          }}
+                          style={{
+                            width: '100%',
+                            padding: '12px',
+                            borderRadius: '8px',
+                            border: 'none',
+                            backgroundColor: 'var(--accent-purple)',
+                            color: '#fff',
+                            fontWeight: 700,
+                            cursor: 'pointer',
+                            fontSize: '0.9rem',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            gap: '6px'
+                          }}
+                        >
+                          <FileText size={16} /> Print Prescription Slip
+                        </button>
+                      </div>
+                    )}
                   </>
                 )}
               </div>
@@ -797,9 +1036,35 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
                       backgroundColor: msg.sender === 'user' ? 'rgba(6,182,212,0.1)' : 'rgba(255,255,255,0.03)',
                       borderColor: msg.sender === 'user' ? 'rgba(6,182,212,0.2)' : 'var(--border-primary)',
                       color: 'var(--text-primary)',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'space-between',
+                      gap: '8px'
                     }}
                   >
-                    {msg.text}
+                    <span>{msg.text}</span>
+                    {msg.sender === 'bot' && (
+                      <button
+                        onClick={() => {
+                          const utterance = new SpeechSynthesisUtterance(msg.text);
+                          window.speechSynthesis.cancel();
+                          window.speechSynthesis.speak(utterance);
+                        }}
+                        style={{
+                          background: 'none',
+                          border: 'none',
+                          color: 'var(--text-secondary)',
+                          cursor: 'pointer',
+                          padding: '2px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          flexShrink: 0
+                        }}
+                        title="Read out loud"
+                      >
+                        <Volume2 size={12} />
+                      </button>
+                    )}
                   </div>
                 ))}
               </div>
@@ -823,9 +1088,28 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
               </div>
 
               <div style={styles.chatInputRow}>
+                <button
+                  onClick={handleStartSpeechRecognition}
+                  style={{
+                    backgroundColor: isListeningSpeech ? 'var(--accent-rose)' : 'rgba(255,255,255,0.04)',
+                    border: '1px solid var(--border-primary)',
+                    borderRadius: '8px',
+                    color: isListeningSpeech ? '#fff' : 'var(--text-secondary)',
+                    width: '32px',
+                    height: '32px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    cursor: 'pointer',
+                    flexShrink: 0
+                  }}
+                  title="Speech-to-Text"
+                >
+                  <Mic size={14} />
+                </button>
                 <input
                   type="text"
-                  placeholder="Ask Clinical Assistant..."
+                  placeholder={isListeningSpeech ? "Listening..." : "Ask Clinical Assistant..."}
                   value={chatInput}
                   onChange={(e) => setChatInput(e.target.value)}
                   onKeyDown={(e) => e.key === 'Enter' && handleSendChatMessage()}
@@ -915,7 +1199,7 @@ const styles: { [key: string]: React.CSSProperties } = {
   },
   metricsGrid: {
     display: 'grid',
-    gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))',
+    gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))',
     gap: '20px',
     marginBottom: '40px',
   },

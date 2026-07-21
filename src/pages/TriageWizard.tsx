@@ -19,6 +19,11 @@ export interface TriageFormData {
   description: string;
   conditions: string[];
   patientId?: string;
+  temperature?: string;
+  systolicBp?: string;
+  diastolicBp?: string;
+  heartRate?: string;
+  spo2?: string;
 }
 
 const SymptomIllustration: React.FC<{ imageKey: string; color: string; realImg?: string }> = ({ imageKey, color, realImg }) => {
@@ -240,6 +245,11 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
     description: '',
     conditions: [],
     patientId: '',
+    temperature: '98.6',
+    systolicBp: '120',
+    diastolicBp: '80',
+    heartRate: '72',
+    spo2: '98',
   });
 
   const [errors, setErrors] = useState<{ [key: string]: boolean }>({});
@@ -264,6 +274,21 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
       }
       if (!formData.gender) {
         newErrors.gender = true;
+      }
+      if (!formData.temperature?.trim() || isNaN(Number(formData.temperature))) {
+        newErrors.temperature = true;
+      }
+      if (!formData.systolicBp?.trim() || isNaN(Number(formData.systolicBp))) {
+        newErrors.systolicBp = true;
+      }
+      if (!formData.diastolicBp?.trim() || isNaN(Number(formData.diastolicBp))) {
+        newErrors.diastolicBp = true;
+      }
+      if (!formData.heartRate?.trim() || isNaN(Number(formData.heartRate))) {
+        newErrors.heartRate = true;
+      }
+      if (!formData.spo2?.trim() || isNaN(Number(formData.spo2))) {
+        newErrors.spo2 = true;
       }
     } else if (step === 2) {
       if (formData.symptoms.length === 0) {
@@ -806,7 +831,142 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
                     </button>
                   ))}
                 </div>
-                {errors.duration && <span style={styles.errorText}>Please select symptom duration</span>}
+                {errors.conditions && <span style={styles.errorText}>Please pick a category option</span>}
+              </div>
+
+              {/* Clinical Vital Signs Section */}
+              <div style={{ marginTop: '24px', borderTop: '1px solid var(--border-primary)', paddingTop: '20px' }}>
+                <h3 style={{ fontSize: '1rem', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px', color: 'var(--text-primary)' }}>
+                  <Activity size={18} color="var(--accent-cyan)" /> Clinical Vital Signs (Nurse Intake)
+                </h3>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '16px' }}>
+                  {/* Temperature */}
+                  <div className={`floating-input-group ${errors.temperature ? 'shake-animation' : ''}`} style={styles.inputWrapper}>
+                    <input
+                      type="text"
+                      placeholder=" "
+                      value={formData.temperature}
+                      onChange={(e) => {
+                        setFormData({ ...formData, temperature: e.target.value });
+                        if (errors.temperature) setErrors((prev) => ({ ...prev, temperature: false }));
+                      }}
+                      className="floating-input"
+                      style={{
+                        borderColor: errors.temperature ? 'var(--accent-rose)' : undefined,
+                        boxShadow: errors.temperature ? '0 0 15px rgba(244,63,94,0.1)' : undefined
+                      }}
+                      id="temp-input"
+                    />
+                    <label className="floating-label" htmlFor="temp-input">Temperature (°F)</label>
+                    {errors.temperature && <span style={styles.errorText}>Invalid value</span>}
+                  </div>
+
+                  {/* Heart Rate */}
+                  <div className={`floating-input-group ${errors.heartRate ? 'shake-animation' : ''}`} style={styles.inputWrapper}>
+                    <input
+                      type="text"
+                      placeholder=" "
+                      value={formData.heartRate}
+                      onChange={(e) => {
+                        setFormData({ ...formData, heartRate: e.target.value });
+                        if (errors.heartRate) setErrors((prev) => ({ ...prev, heartRate: false }));
+                      }}
+                      className="floating-input"
+                      style={{
+                        borderColor: errors.heartRate ? 'var(--accent-rose)' : undefined,
+                        boxShadow: errors.heartRate ? '0 0 15px rgba(244,63,94,0.1)' : undefined
+                      }}
+                      id="hr-input"
+                    />
+                    <label className="floating-label" htmlFor="hr-input">Heart Rate (BPM)</label>
+                    {errors.heartRate && <span style={styles.errorText}>Invalid value</span>}
+                  </div>
+
+                  {/* SpO2 */}
+                  <div className={`floating-input-group ${errors.spo2 ? 'shake-animation' : ''}`} style={styles.inputWrapper}>
+                    <input
+                      type="text"
+                      placeholder=" "
+                      value={formData.spo2}
+                      onChange={(e) => {
+                        setFormData({ ...formData, spo2: e.target.value });
+                        if (errors.spo2) setErrors((prev) => ({ ...prev, spo2: false }));
+                      }}
+                      className="floating-input"
+                      style={{
+                        borderColor: errors.spo2 ? 'var(--accent-rose)' : undefined,
+                        boxShadow: errors.spo2 ? '0 0 15px rgba(244,63,94,0.1)' : undefined
+                      }}
+                      id="spo2-input"
+                    />
+                    <label className="floating-label" htmlFor="spo2-input">Oxygen SpO2 (%)</label>
+                    {errors.spo2 && <span style={styles.errorText}>Invalid value</span>}
+                  </div>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '12px' }}>
+                  {/* BP Systolic */}
+                  <div className={`floating-input-group ${errors.systolicBp ? 'shake-animation' : ''}`} style={styles.inputWrapper}>
+                    <input
+                      type="text"
+                      placeholder=" "
+                      value={formData.systolicBp}
+                      onChange={(e) => {
+                        setFormData({ ...formData, systolicBp: e.target.value });
+                        if (errors.systolicBp) setErrors((prev) => ({ ...prev, systolicBp: false }));
+                      }}
+                      className="floating-input"
+                      style={{
+                        borderColor: errors.systolicBp ? 'var(--accent-rose)' : undefined,
+                        boxShadow: errors.systolicBp ? '0 0 15px rgba(244,63,94,0.1)' : undefined
+                      }}
+                      id="bp-sys-input"
+                    />
+                    <label className="floating-label" htmlFor="bp-sys-input">BP Systolic (mmHg)</label>
+                    {errors.systolicBp && <span style={styles.errorText}>Invalid value</span>}
+                  </div>
+
+                  {/* BP Diastolic */}
+                  <div className={`floating-input-group ${errors.diastolicBp ? 'shake-animation' : ''}`} style={styles.inputWrapper}>
+                    <input
+                      type="text"
+                      placeholder=" "
+                      value={formData.diastolicBp}
+                      onChange={(e) => {
+                        setFormData({ ...formData, diastolicBp: e.target.value });
+                        if (errors.diastolicBp) setErrors((prev) => ({ ...prev, diastolicBp: false }));
+                      }}
+                      className="floating-input"
+                      style={{
+                        borderColor: errors.diastolicBp ? 'var(--accent-rose)' : undefined,
+                        boxShadow: errors.diastolicBp ? '0 0 15px rgba(244,63,94,0.1)' : undefined
+                      }}
+                      id="bp-dia-input"
+                    />
+                    <label className="floating-label" htmlFor="bp-dia-input">BP Diastolic (mmHg)</label>
+                    {errors.diastolicBp && <span style={styles.errorText}>Invalid value</span>}
+                  </div>
+                </div>
+
+                {/* Vitals Warn/Status Badge */}
+                {((formData.spo2 && Number(formData.spo2) < 95) || (formData.temperature && Number(formData.temperature) > 100.4) || (formData.systolicBp && Number(formData.systolicBp) > 140)) && (
+                  <div style={{
+                    backgroundColor: 'rgba(244,63,94,0.08)',
+                    border: '1px solid rgba(244,63,94,0.2)',
+                    color: 'var(--accent-rose)',
+                    borderRadius: '8px',
+                    padding: '10px 14px',
+                    fontSize: '0.8rem',
+                    fontWeight: 600,
+                    marginTop: '12px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <AlertCircle size={14} /> Warning: High-risk vital signs detected. AI classifier urgency score will be adjusted automatically.
+                  </div>
+                )}
               </div>
 
               {/* Severity scale */}
