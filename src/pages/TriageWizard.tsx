@@ -21,6 +21,211 @@ export interface TriageFormData {
   patientId?: string;
 }
 
+const SymptomIllustration: React.FC<{ imageKey: string; color: string; realImg?: string }> = ({ imageKey, color, realImg }) => {
+  if (realImg && !imageKey.startsWith('svg-')) {
+    return <img src={realImg} className="symptom-card-image" alt="Symptom" />;
+  }
+
+  return (
+    <svg viewBox="0 0 100 100" className="symptom-card-image" style={{ background: '#090d16', opacity: 0.35 }}>
+      {/* Background medical grid */}
+      <circle cx="50" cy="50" r="38" fill="none" stroke={color} strokeWidth="1" strokeDasharray="3,3" opacity="0.3" />
+      <line x1="50" y1="10" x2="50" y2="90" stroke={color} strokeWidth="0.5" strokeDasharray="2,2" opacity="0.2" />
+      <line x1="10" y1="50" x2="90" y2="50" stroke={color} strokeWidth="0.5" strokeDasharray="2,2" opacity="0.2" />
+
+      {/* Specific Symptom Graphics */}
+      {imageKey === 'svg-chest-pain' && (
+        <g>
+          <path d="M 50 35 C 40 20, 20 30, 30 50 C 40 65, 50 75, 50 75 C 50 75, 60 65, 70 50 C 80 30, 60 20, 50 35 Z" fill="none" stroke={color} strokeWidth="2.5" />
+          <path d="M 25 50 L 40 50 L 45 35 L 52 65 L 58 45 L 62 50 L 75 50" fill="none" stroke="#f43f5e" strokeWidth="2" strokeLinecap="round" />
+        </g>
+      )}
+
+      {imageKey === 'svg-breath' && (
+        <g>
+          <path d="M 35 30 C 25 30, 25 60, 35 70 C 42 75, 45 60, 42 45 Z" fill="none" stroke={color} strokeWidth="2.5" />
+          <path d="M 65 30 C 75 30, 75 60, 65 70 C 58 75, 55 60, 58 45 Z" fill="none" stroke={color} strokeWidth="2.5" />
+          <path d="M 50 20 L 50 40 M 40 48 L 50 40 L 60 48" fill="none" stroke={color} strokeWidth="2" />
+          <circle cx="50" cy="60" r="12" fill={color} opacity="0.3" />
+        </g>
+      )}
+
+      {imageKey === 'svg-cough' && (
+        <g>
+          <path d="M 50 20 C 40 20, 30 30, 30 45 C 30 55, 40 60, 40 70 L 60 70 C 60 60, 70 55, 70 45 C 70 30, 60 20, 50 20" fill="none" stroke={color} strokeWidth="2.5" />
+          <path d="M 35 82 L 65 82 M 40 88 L 60 88" stroke={color} strokeWidth="2.5" strokeLinecap="round" />
+          <circle cx="50" cy="45" r="8" fill={color} opacity="0.5" />
+          <path d="M 45 40 L 55 50" stroke={color} strokeWidth="2" />
+        </g>
+      )}
+
+      {imageKey === 'svg-throat' && (
+        <g>
+          <path d="M 30 20 L 70 20 L 60 60 L 50 90 L 40 60 Z" fill="none" stroke={color} strokeWidth="2.5" />
+          <path d="M 40 38 Q 50 48 60 38" stroke={color} strokeWidth="2" fill="none" />
+          <path d="M 35 50 Q 50 62 65 50" stroke={color} strokeWidth="2" fill="none" />
+          <circle cx="50" cy="48" r="9" fill={color} opacity="0.6" />
+        </g>
+      )}
+
+      {imageKey === 'svg-wheeze' && (
+        <g>
+          <path d="M 25 35 Q 50 25 75 35 M 25 50 Q 50 40 75 50 M 25 65 Q 50 55 75 65" fill="none" stroke={color} strokeWidth="2.5" strokeDasharray="6,3" />
+          <circle cx="50" cy="50" r="16" fill="none" stroke={color} strokeWidth="1.5" />
+        </g>
+      )}
+
+      {imageKey === 'svg-palpitations' && (
+        <g>
+          <path d="M 15 50 L 30 50 L 35 25 L 42 75 L 50 15 L 58 85 L 65 40 L 72 55 L 85 50" fill="none" stroke={color} strokeWidth="3" strokeLinecap="round" />
+        </g>
+      )}
+
+      {imageKey === 'svg-swelling' && (
+        <g>
+          <circle cx="50" cy="50" r="22" fill={color} opacity="0.3" />
+          <circle cx="50" cy="50" r="32" fill="none" stroke={color} strokeWidth="2" strokeDasharray="4,4" />
+          <path d="M 50 20 L 50 80 M 20 50 L 80 50" stroke={color} strokeWidth="1.5" />
+        </g>
+      )}
+
+      {imageKey === 'svg-headache' && (
+        <g>
+          <path d="M 50 25 C 32 25 25 40 25 55 C 25 70 38 80 50 80 C 62 80 75 70 75 55 C 75 40 68 25 50 25 Z" fill="none" stroke={color} strokeWidth="2.5" />
+          <path d="M 35 45 Q 50 30 65 45 M 35 55 Q 50 40 65 55 M 35 65 Q 50 50 65 65" stroke={color} strokeWidth="2" fill="none" />
+          <circle cx="50" cy="35" r="5" fill="#f43f5e" />
+        </g>
+      )}
+
+      {imageKey === 'svg-dizzy' && (
+        <g>
+          <path d="M 50 50 m -25, 0 a 25,25 0 1,0 50,0 a 25,25 0 1,0 -50,0" fill="none" stroke={color} strokeWidth="2" strokeDasharray="8,4" />
+          <path d="M 50 50 m -15, 0 a 15,15 0 1,0 30,0 a 15,15 0 1,0 -30,0" fill="none" stroke={color} strokeWidth="2.5" />
+          <circle cx="50" cy="50" r="4" fill={color} />
+        </g>
+      )}
+
+      {imageKey === 'svg-sensory' && (
+        <g>
+          <path d="M 30 70 C 35 40 65 40 70 70" fill="none" stroke={color} strokeWidth="2.5" />
+          <path d="M 50 25 L 50 55 M 40 35 L 60 35" stroke={color} strokeWidth="2" />
+          <circle cx="50" cy="25" r="6" fill={color} />
+          <circle cx="50" cy="70" r="6" fill={color} />
+        </g>
+      )}
+
+      {imageKey === 'svg-numbness' && (
+        <g>
+          <path d="M 30 30 L 70 70 M 70 30 L 30 70" stroke={color} strokeWidth="2" strokeDasharray="3,3" />
+          <circle cx="30" cy="30" r="5" fill={color} />
+          <circle cx="70" cy="30" r="5" fill={color} />
+          <circle cx="30" cy="70" r="5" fill={color} />
+          <circle cx="70" cy="70" r="5" fill={color} />
+          <circle cx="50" cy="50" r="8" fill={color} opacity="0.6" />
+        </g>
+      )}
+
+      {imageKey === 'svg-confusion' && (
+        <g>
+          <circle cx="35" cy="35" r="10" stroke={color} fill="none" strokeWidth="2" />
+          <circle cx="65" cy="35" r="10" stroke={color} fill="none" strokeWidth="2" />
+          <circle cx="50" cy="65" r="10" stroke={color} fill="none" strokeWidth="2" />
+          <line x1="35" y1="35" x2="65" y2="35" stroke={color} strokeWidth="1.5" />
+          <line x1="35" y1="35" x2="50" y2="65" stroke={color} strokeWidth="1.5" />
+          <line x1="65" y1="35" x2="50" y2="65" stroke={color} strokeWidth="1.5" />
+        </g>
+      )}
+
+      {imageKey === 'svg-vision' && (
+        <g>
+          <path d="M 20 50 C 35 30 65 30 80 50 C 65 70 35 70 20 50 Z" fill="none" stroke={color} strokeWidth="2.5" />
+          <circle cx="50" cy="50" r="12" fill="none" stroke={color} strokeWidth="2" />
+          <circle cx="50" cy="50" r="5" fill={color} />
+          <path d="M 50 20 L 50 30 M 50 70 L 50 80 M 20 50 L 30 50 M 70 50 L 80 50" stroke={color} strokeWidth="1.5" />
+        </g>
+      )}
+
+      {imageKey === 'svg-nausea' && (
+        <g>
+          <path d="M 30 35 C 30 25, 70 25, 70 35 C 70 55, 60 75, 50 75 C 40 75, 30 55, 30 35 Z" fill="none" stroke={color} strokeWidth="2.5" />
+          <path d="M 38 45 Q 50 55 62 45" stroke={color} strokeWidth="2" fill="none" />
+          <path d="M 40 58 Q 50 68 60 58" stroke={color} strokeWidth="2" fill="none" />
+        </g>
+      )}
+
+      {imageKey === 'svg-abdominal' && (
+        <g>
+          <rect x="25" y="25" width="50" height="50" rx="10" fill="none" stroke={color} strokeWidth="2" />
+          <line x1="50" y1="25" x2="50" y2="75" stroke={color} strokeWidth="1" strokeDasharray="3,3" />
+          <line x1="25" y1="50" x2="75" y2="50" stroke={color} strokeWidth="1" strokeDasharray="3,3" />
+          <circle cx="37" cy="62" r="7" fill={color} opacity="0.6" />
+        </g>
+      )}
+
+      {imageKey === 'svg-diarrhea' && (
+        <g>
+          <path d="M 30 30 Q 50 20 70 30 T 30 50 T 70 70" fill="none" stroke={color} strokeWidth="2.5" strokeDasharray="6,3" />
+          <circle cx="50" cy="70" r="5" fill={color} />
+          <circle cx="35" cy="50" r="4" fill={color} />
+        </g>
+      )}
+
+      {imageKey === 'svg-fever' && (
+        <g>
+          <path d="M 46 25 L 54 25 L 54 58 A 12 12 0 1 1 46 58 Z" fill="none" stroke={color} strokeWidth="2.5" />
+          <circle cx="50" cy="64" r="7" fill={color} />
+          <rect x="48" y="38" width="4" height="26" fill={color} />
+          <path d="M 65 30 Q 70 25 65 20 M 72 40 Q 77 35 72 30" stroke="#f43f5e" strokeWidth="2" fill="none" />
+        </g>
+      )}
+
+      {imageKey === 'svg-muscle' && (
+        <g>
+          <path d="M 30 40 Q 50 20 70 40 Q 80 50 70 60 Q 50 80 30 60 Q 20 50 30 40 Z" fill="none" stroke={color} strokeWidth="2.5" />
+          <line x1="30" y1="50" x2="70" y2="50" stroke={color} strokeWidth="2" strokeDasharray="4,2" />
+          <circle cx="50" cy="50" r="6" fill={color} />
+        </g>
+      )}
+
+      {imageKey === 'svg-fatigue' && (
+        <g>
+          <rect x="25" y="40" width="45" height="24" rx="4" fill="none" stroke={color} strokeWidth="2.5" />
+          <rect x="70" y="47" width="5" height="10" rx="2" fill={color} />
+          <rect x="29" y="44" width="12" height="16" fill="#f43f5e" />
+          <path d="M 45 25 L 55 25 M 50 20 L 50 30" stroke={color} strokeWidth="2" />
+        </g>
+      )}
+
+      {imageKey === 'svg-sweat' && (
+        <g>
+          <path d="M 35 40 C 35 30, 50 15, 50 15 C 50 15, 65 30, 65 40 C 65 50, 58 58, 50 58 C 42 58, 35 50, 35 40 Z" fill={color} opacity="0.4" stroke={color} strokeWidth="2" />
+          <path d="M 20 65 C 20 60, 30 50, 30 50 C 30 50, 40 60, 40 65 C 40 72, 30 75, 30 75 C 30 75, 20 72, 20 65 Z" fill={color} opacity="0.3" stroke={color} strokeWidth="1.5" />
+          <path d="M 60 70 C 60 65, 70 55, 70 55 C 70 55, 80 65, 80 70 C 80 76, 70 80, 70 80 C 70 80, 60 76, 60 70 Z" fill={color} opacity="0.3" stroke={color} strokeWidth="1.5" />
+        </g>
+      )}
+
+      {imageKey === 'svg-rash' && (
+        <g>
+          <path d="M 20 30 Q 50 20 80 30 T 20 80" fill="none" stroke={color} strokeWidth="1.5" strokeDasharray="4,4" />
+          <circle cx="35" cy="40" r="5" fill="#f43f5e" />
+          <circle cx="55" cy="35" r="7" fill="#f43f5e" />
+          <circle cx="68" cy="52" r="4" fill="#f43f5e" />
+          <circle cx="42" cy="60" r="8" fill="#f43f5e" />
+          <circle cx="58" cy="68" r="5" fill="#f43f5e" />
+        </g>
+      )}
+
+      {imageKey === 'svg-ear' && (
+        <g>
+          <path d="M 45 20 C 65 20 75 35 70 55 C 65 70 50 80 40 75 C 35 72 45 60 45 50 C 45 40 35 30 45 20 Z" fill="none" stroke={color} strokeWidth="2.5" />
+          <path d="M 20 50 Q 10 50 10 50 M 23 38 Q 12 35 12 35 M 23 62 Q 12 65 12 65" stroke={color} strokeWidth="2" strokeLinecap="round" />
+          <circle cx="45" cy="50" r="4" fill={color} />
+        </g>
+      )}
+    </svg>
+  );
+};
+
 export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) => {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState<TriageFormData>({
@@ -250,16 +455,16 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
 
   const availableSymptoms = [
     // Cardiorespiratory
-    { name: 'Chest Pain', icon: Heart, color: 'var(--accent-rose)', image: '/assets/sym_chest_pain.png', category: 'Cardiorespiratory' as const },
-    { name: 'Shortness of Breath', icon: Activity, color: 'var(--accent-cyan)', image: '/assets/sym_breath.png', category: 'Cardiorespiratory' as const },
+    { name: 'Chest Pain', icon: Heart, color: 'var(--accent-rose)', image: 'svg-chest-pain', realImage: '/assets/sym_chest_pain.png', category: 'Cardiorespiratory' as const },
+    { name: 'Shortness of Breath', icon: Activity, color: 'var(--accent-cyan)', image: 'svg-breath', realImage: '/assets/sym_breath.png', category: 'Cardiorespiratory' as const },
     { name: 'Persistent Cough', icon: Activity, color: 'var(--accent-cyan)', image: 'svg-cough', category: 'Cardiorespiratory' as const },
     { name: 'Sore Throat', icon: Activity, color: 'var(--accent-cyan)', image: 'svg-throat', category: 'Cardiorespiratory' as const },
     { name: 'Wheezing / Airway Stridor', icon: Wind, color: 'var(--accent-cyan)', image: 'svg-wheeze', category: 'Cardiorespiratory' as const },
-    { name: 'Palpitations / Rapid Heart Rate', icon: Zap, color: 'var(--accent-rose)', image: 'svg-heart', category: 'Cardiorespiratory' as const },
+    { name: 'Palpitations / Rapid Heart Rate', icon: Zap, color: 'var(--accent-rose)', image: 'svg-palpitations', category: 'Cardiorespiratory' as const },
     { name: 'Swelling / Edema', icon: Activity, color: 'var(--accent-purple)', image: 'svg-swelling', category: 'Cardiorespiratory' as const },
 
     // Neurological
-    { name: 'Severe Headache', icon: Brain, color: 'var(--accent-purple)', image: '/assets/sym_headache.png', category: 'Neurological' as const },
+    { name: 'Severe Headache', icon: Brain, color: 'var(--accent-purple)', image: 'svg-headache', realImage: '/assets/sym_headache.png', category: 'Neurological' as const },
     { name: 'Dizziness / Vertigo', icon: Compass, color: 'var(--accent-purple)', image: 'svg-dizzy', category: 'Neurological' as const },
     { name: 'Loss of Taste / Smell', icon: Brain, color: 'var(--accent-purple)', image: 'svg-sensory', category: 'Neurological' as const },
     { name: 'Numbness / Tingling', icon: Brain, color: 'var(--accent-purple)', image: 'svg-numbness', category: 'Neurological' as const },
@@ -272,7 +477,7 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
     { name: 'Diarrhea', icon: Frown, color: 'var(--accent-orange)', image: 'svg-diarrhea', category: 'Gastrointestinal' as const },
 
     // Systemic
-    { name: 'Fever & Chills', icon: Thermometer, color: 'var(--accent-orange)', image: '/assets/sym_fever.png', category: 'Systemic' as const },
+    { name: 'Fever & Chills', icon: Thermometer, color: 'var(--accent-orange)', image: 'svg-fever', realImage: '/assets/sym_fever.png', category: 'Systemic' as const },
     { name: 'Muscle / Joint Pain', icon: Activity, color: 'var(--accent-orange)', image: 'svg-muscle', category: 'Systemic' as const },
     { name: 'Fatigue / Extreme Weakness', icon: Frown, color: 'var(--accent-orange)', image: 'svg-fatigue', category: 'Systemic' as const },
     { name: 'Night Sweats', icon: Droplets, color: 'var(--accent-orange)', image: 'svg-sweat', category: 'Systemic' as const },
@@ -282,7 +487,7 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
     { name: 'Earache / Hearing Changes', icon: Activity, color: 'var(--accent-orange)', image: 'svg-ear', category: 'Other' as const }
   ];
 
-  const preExistingConditions = ['Hypertension', 'Diabetes (Type I/II)', 'Asthma/COPD', 'Coronary Heart Disease', 'None of these'];
+  const preExistingConditions = ['Hypertension','Gastric issues','Blood Pressure','Diabetes (Type I/II)', 'Asthma/COPD', 'Coronary Heart Disease', 'None of these'];
 
   return (
     <div style={styles.container}>
@@ -549,45 +754,11 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
                         className="symptom-visual-card"
                       >
                         {/* Diagnostic custom visual overlay */}
-                        {sym.image.startsWith('svg-') ? (
-                          sym.image === 'svg-cough' ? (
-                            <svg viewBox="0 0 100 100" className="symptom-card-image" style={{ background: '#090d16', opacity: 0.2 }}>
-                              <path d="M 50 20 C 40 20, 30 30, 30 45 C 30 55, 40 60, 40 70 L 60 70 C 60 60, 70 55, 70 45 C 70 30, 60 20, 50 20" fill="none" stroke="var(--accent-cyan)" strokeWidth="3" />
-                              <path d="M 35 85 L 65 85 M 40 90 L 60 90" stroke="var(--accent-cyan)" strokeWidth="3" strokeLinecap="round" />
-                              <circle cx="50" cy="45" r="8" fill="var(--accent-cyan)" opacity="0.6" />
-                              <path d="M 45 40 L 55 50" stroke="var(--accent-cyan)" strokeWidth="2" />
-                            </svg>
-                          ) : sym.image === 'svg-throat' ? (
-                            <svg viewBox="0 0 100 100" className="symptom-card-image" style={{ background: '#090d16', opacity: 0.2 }}>
-                              <path d="M 30 20 L 70 20 L 60 60 L 50 90 L 40 60 Z" fill="none" stroke="var(--accent-purple)" strokeWidth="3" />
-                              <path d="M 40 40 Q 50 50 60 40" stroke="var(--accent-purple)" strokeWidth="2.5" fill="none" />
-                              <path d="M 35 50 Q 50 65 65 50" stroke="var(--accent-purple)" strokeWidth="2.5" fill="none" />
-                              <circle cx="50" cy="50" r="10" fill="var(--accent-purple)" opacity="0.6" />
-                            </svg>
-                          ) : (
-                            <div className="symptom-card-image-placeholder" style={{
-                              width: '100%',
-                              height: '100%',
-                              display: 'flex',
-                              alignItems: 'center',
-                              justifyContent: 'center',
-                              background: 'radial-gradient(circle, rgba(255,255,255,0.02) 0%, rgba(9,13,22,0.6) 100%)',
-                              opacity: 0.15,
-                              position: 'absolute',
-                              top: 0,
-                              left: 0,
-                            }}>
-                              <svg viewBox="0 0 100 100" style={{ width: '100%', height: '100%' }}>
-                                <circle cx="50" cy="50" r="35" fill="none" stroke={sym.color} strokeWidth="1" strokeDasharray="3,3" opacity="0.4" />
-                                <circle cx="50" cy="50" r="20" fill="none" stroke={sym.color} strokeWidth="1" opacity="0.2" />
-                                <line x1="50" y1="5" x2="50" y2="95" stroke={sym.color} strokeWidth="0.5" strokeDasharray="2,2" opacity="0.15" />
-                                <line x1="5" y1="50" x2="95" y2="50" stroke={sym.color} strokeWidth="0.5" strokeDasharray="2,2" opacity="0.15" />
-                              </svg>
-                            </div>
-                          )
-                        ) : (
-                          <img src={sym.image} className="symptom-card-image" alt={sym.name} />
-                        )}
+                        <SymptomIllustration 
+                          imageKey={sym.image} 
+                          color={sym.color} 
+                          realImg={(sym as any).realImage} 
+                        />
 
                         <div className="symptom-card-gradient" />
                         
