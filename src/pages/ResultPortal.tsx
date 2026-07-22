@@ -77,7 +77,7 @@ export const ResultPortal: React.FC<ResultPortalProps> = ({ patientId, triageRes
         particleCount: 80,
         spread: 70,
         origin: { y: 0.6 },
-        colors: ['#06b6d4', '#a855f7', '#10b981']
+        colors: ['#2563EB', '#06B6D4', '#16A34A']
       });
     }
   }, []);
@@ -347,7 +347,7 @@ export const ResultPortal: React.FC<ResultPortalProps> = ({ patientId, triageRes
                 padding: '16px',
                 borderRadius: '12px',
                 border: 'none',
-                background: 'linear-gradient(135deg, var(--accent-rose) 0%, var(--accent-purple) 100%)',
+                background: 'linear-gradient(135deg, var(--accent-cyan) 0%, var(--accent-purple) 100%)',
                 color: '#fff',
                 fontWeight: 700,
                 fontSize: '1rem',

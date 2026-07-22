@@ -509,19 +509,19 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
                                     textTransform: 'uppercase',
                                     letterSpacing: '0.5px',
                                     backgroundColor: 
-                                      item.status === 'admitted' ? 'rgba(244,63,94,0.1)' :
-                                      item.status === 'examined' ? 'rgba(16,185,129,0.1)' :
-                                      item.status.startsWith('room') ? 'rgba(6,182,212,0.1)' : 'rgba(249,115,22,0.1)',
+                                      item.status === 'admitted' ? 'rgba(var(--accent-rose-rgb), 0.1)' :
+                                      item.status === 'examined' ? 'rgba(var(--accent-emerald-rgb), 0.1)' :
+                                      item.status.startsWith('room') ? 'rgba(var(--accent-cyan-rgb), 0.1)' : 'rgba(var(--accent-orange-rgb), 0.1)',
                                     color: 
                                       item.status === 'admitted' ? 'var(--accent-rose)' :
                                       item.status === 'examined' ? 'var(--accent-emerald)' :
                                       item.status.startsWith('room') ? 'var(--accent-cyan)' : 'var(--accent-orange)',
                                     border: `1px solid ${
-                                      item.status === 'admitted' ? 'rgba(244,63,94,0.2)' :
-                                      item.status === 'examined' ? 'rgba(16,185,129,0.2)' :
-                                      item.status.startsWith('room') ? 'rgba(6,182,212,0.2)' : 'rgba(249,115,22,0.2)'
+                                      item.status === 'admitted' ? 'rgba(var(--accent-rose-rgb), 0.2)' :
+                                      item.status === 'examined' ? 'rgba(var(--accent-emerald-rgb), 0.2)' :
+                                      item.status.startsWith('room') ? 'rgba(var(--accent-cyan-rgb), 0.2)' : 'rgba(var(--accent-orange-rgb), 0.2)'
                                     }`,
-                                    boxShadow: item.status === 'admitted' ? '0 0 8px rgba(244,63,94,0.1)' : 'none'
+                                    boxShadow: item.status === 'admitted' ? '0 0 8px rgba(var(--accent-rose-rgb), 0.1)' : 'none'
                                   }}>
                                     {item.status === 'admitted' ? 'Admitted Ward' :
                                      item.status === 'examined' ? 'Prescribed' :
@@ -584,8 +584,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
                                   marginTop: '12px',
                                   padding: '8px 16px',
                                   borderRadius: '8px',
-                                  border: '1px solid rgba(244,63,94,0.2)',
-                                  backgroundColor: 'rgba(244,63,94,0.06)',
+                                  border: '1px solid rgba(var(--accent-rose-rgb), 0.2)',
+                                  backgroundColor: 'rgba(var(--accent-rose-rgb), 0.06)',
                                   color: 'var(--accent-rose)',
                                   fontSize: '0.8rem',
                                   fontWeight: 700,
@@ -609,7 +609,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
                                     padding: '6px 12px',
                                     borderRadius: '6px',
                                     border: '1px solid var(--accent-cyan)',
-                                    backgroundColor: item.status === 'room_101' ? 'rgba(6,182,212,0.1)' : 'transparent',
+                                    backgroundColor: item.status === 'room_101' ? 'rgba(var(--accent-cyan-rgb), 0.1)' : 'transparent',
                                     color: 'var(--accent-cyan)',
                                     fontSize: '0.75rem',
                                     fontWeight: 600,
@@ -624,7 +624,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
                                     padding: '6px 12px',
                                     borderRadius: '6px',
                                     border: '1px solid var(--accent-cyan)',
-                                    backgroundColor: item.status === 'room_102' ? 'rgba(6,182,212,0.1)' : 'transparent',
+                                    backgroundColor: item.status === 'room_102' ? 'rgba(var(--accent-cyan-rgb), 0.1)' : 'transparent',
                                     color: 'var(--accent-cyan)',
                                     fontSize: '0.75rem',
                                     fontWeight: 600,
@@ -735,7 +735,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
 
               {/* Admin Control Console side-card (Admin only) */}
               {role === 'admin' && (
-                <div style={{ ...styles.sideCard, marginTop: '20px', borderColor: 'var(--accent-purple)', boxShadow: '0 0 15px rgba(168,85,247,0.1)' }} className="glass-card">
+                <div style={{ ...styles.sideCard, marginTop: '20px', borderColor: 'var(--accent-purple)', boxShadow: '0 0 15px rgba(var(--accent-purple-rgb), 0.1)' }} className="glass-card">
                   <h3 style={styles.sideCardTitle}>
                     <Settings size={16} style={{ marginRight: 6, verticalAlign: 'middle' }} /> 
                     Admin Config Console
@@ -1064,7 +1064,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
                               <div key={sym} style={{ backgroundColor: 'rgba(255,255,255,0.02)', border: '1px solid var(--border-primary)', borderRadius: '8px', padding: '10px' }}>
                                 <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
                                   <span style={{ fontSize: '0.8rem', fontWeight: 700, color: 'var(--text-primary)' }}>{sym}</span>
-                                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-cyan)', backgroundColor: 'rgba(6,182,212,0.1)', padding: '2px 6px', borderRadius: '4px' }}>
+                                  <span style={{ fontSize: '0.75rem', fontWeight: 600, color: 'var(--accent-cyan)', backgroundColor: 'rgba(var(--accent-cyan-rgb), 0.1)', padding: '2px 6px', borderRadius: '4px' }}>
                                     ICD-10: {match.code}
                                   </span>
                                 </div>
@@ -1218,8 +1218,8 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
                     style={{
                       ...styles.chatBubble,
                       alignSelf: msg.sender === 'user' ? 'flex-end' : 'flex-start',
-                      backgroundColor: msg.sender === 'user' ? 'rgba(6,182,212,0.1)' : 'rgba(255,255,255,0.03)',
-                      borderColor: msg.sender === 'user' ? 'rgba(6,182,212,0.2)' : 'var(--border-primary)',
+                      backgroundColor: msg.sender === 'user' ? 'rgba(var(--accent-cyan-rgb), 0.1)' : 'rgba(255,255,255,0.03)',
+                      borderColor: msg.sender === 'user' ? 'rgba(var(--accent-cyan-rgb), 0.2)' : 'var(--border-primary)',
                       color: 'var(--text-primary)',
                       display: 'flex',
                       alignItems: 'center',
@@ -1662,8 +1662,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     transition: 'opacity 0.2s',
   },
   adminSaveAlert: {
-    backgroundColor: 'rgba(168,85,247,0.1)',
-    border: '1px solid rgba(168,85,247,0.2)',
+    backgroundColor: 'rgba(var(--accent-purple-rgb), 0.1)',
+    border: '1px solid rgba(var(--accent-purple-rgb), 0.2)',
     color: 'var(--accent-purple)',
     padding: '8px 12px',
     borderRadius: '8px',
@@ -1782,7 +1782,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 700,
     padding: '2px 6px',
     borderRadius: '4px',
-    backgroundColor: 'rgba(6,182,212,0.1)',
+    backgroundColor: 'rgba(var(--accent-cyan-rgb), 0.1)',
     color: 'var(--accent-cyan)',
   },
   chatHistory: {

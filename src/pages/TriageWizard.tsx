@@ -570,7 +570,7 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
                   className="floating-input"
                   style={{
                     borderColor: errors.name ? 'var(--accent-rose)' : undefined,
-                    boxShadow: errors.name ? '0 0 15px rgba(244,63,94,0.1)' : undefined
+                    boxShadow: errors.name ? '0 0 15px rgba(var(--accent-rose-rgb),0.1)' : undefined
                   }}
                   id="name-input"
                 />
@@ -594,7 +594,7 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
                     className="floating-input"
                     style={{
                       borderColor: errors.phone ? 'var(--accent-rose)' : undefined,
-                      boxShadow: errors.phone ? '0 0 15px rgba(244,63,94,0.1)' : undefined
+                      boxShadow: errors.phone ? '0 0 15px rgba(var(--accent-rose-rgb),0.1)' : undefined
                     }}
                     id="phone-input"
                   />
@@ -616,7 +616,7 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
                     className="floating-input"
                     style={{
                       borderColor: errors.age ? 'var(--accent-rose)' : undefined,
-                      boxShadow: errors.age ? '0 0 15px rgba(244,63,94,0.1)' : undefined
+                      boxShadow: errors.age ? '0 0 15px rgba(var(--accent-rose-rgb),0.1)' : undefined
                     }}
                     id="age-input"
                   />
@@ -654,7 +654,7 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
                       style={{
                         ...styles.genderBtn,
                         borderColor: formData.gender === g ? 'var(--accent-cyan)' : 'var(--border-primary)',
-                        backgroundColor: formData.gender === g ? 'rgba(6,182,212,0.08)' : 'transparent',
+                        backgroundColor: formData.gender === g ? 'rgba(var(--accent-cyan-rgb), 0.08)' : 'transparent',
                         boxShadow: formData.gender === g ? 'var(--glow-cyan)' : 'none',
                       }}
                     >
@@ -678,7 +678,7 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
                         style={{
                           ...styles.condBtn,
                           borderColor: isSelected ? 'var(--accent-purple)' : 'var(--border-primary)',
-                          backgroundColor: isSelected ? 'rgba(168,85,247,0.08)' : 'transparent',
+                          backgroundColor: isSelected ? 'rgba(var(--accent-purple-rgb), 0.08)' : 'transparent',
                           boxShadow: isSelected ? 'var(--glow-purple)' : 'none',
                         }}
                       >
@@ -749,7 +749,7 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
                     style={{
                       ...styles.categoryTabBtn,
                       borderColor: activeCategory === cat ? 'var(--accent-cyan)' : 'var(--border-primary)',
-                      backgroundColor: activeCategory === cat ? 'rgba(6,182,212,0.08)' : 'transparent',
+                      backgroundColor: activeCategory === cat ? 'rgba(var(--accent-cyan-rgb), 0.08)' : 'transparent',
                       color: activeCategory === cat ? 'var(--accent-cyan)' : 'var(--text-secondary)',
                     }}
                   >
@@ -824,7 +824,7 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
                       style={{
                         ...styles.durBtn,
                         borderColor: formData.duration === dur ? 'var(--accent-cyan)' : 'var(--border-primary)',
-                        backgroundColor: formData.duration === dur ? 'rgba(6,182,212,0.08)' : 'transparent',
+                        backgroundColor: formData.duration === dur ? 'rgba(var(--accent-cyan-rgb), 0.08)' : 'transparent',
                       }}
                     >
                       {dur}
@@ -854,7 +854,7 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
                       className="floating-input"
                       style={{
                         borderColor: errors.temperature ? 'var(--accent-rose)' : undefined,
-                        boxShadow: errors.temperature ? '0 0 15px rgba(244,63,94,0.1)' : undefined
+                        boxShadow: errors.temperature ? '0 0 15px rgba(var(--accent-rose-rgb),0.1)' : undefined
                       }}
                       id="temp-input"
                     />
@@ -875,7 +875,7 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
                       className="floating-input"
                       style={{
                         borderColor: errors.heartRate ? 'var(--accent-rose)' : undefined,
-                        boxShadow: errors.heartRate ? '0 0 15px rgba(244,63,94,0.1)' : undefined
+                        boxShadow: errors.heartRate ? '0 0 15px rgba(var(--accent-rose-rgb),0.1)' : undefined
                       }}
                       id="hr-input"
                     />
@@ -896,7 +896,7 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
                       className="floating-input"
                       style={{
                         borderColor: errors.spo2 ? 'var(--accent-rose)' : undefined,
-                        boxShadow: errors.spo2 ? '0 0 15px rgba(244,63,94,0.1)' : undefined
+                        boxShadow: errors.spo2 ? '0 0 15px rgba(var(--accent-rose-rgb),0.1)' : undefined
                       }}
                       id="spo2-input"
                     />
@@ -919,7 +919,7 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
                       className="floating-input"
                       style={{
                         borderColor: errors.systolicBp ? 'var(--accent-rose)' : undefined,
-                        boxShadow: errors.systolicBp ? '0 0 15px rgba(244,63,94,0.1)' : undefined
+                        boxShadow: errors.systolicBp ? '0 0 15px rgba(var(--accent-rose-rgb),0.1)' : undefined
                       }}
                       id="bp-sys-input"
                     />
@@ -940,7 +940,7 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
                       className="floating-input"
                       style={{
                         borderColor: errors.diastolicBp ? 'var(--accent-rose)' : undefined,
-                        boxShadow: errors.diastolicBp ? '0 0 15px rgba(244,63,94,0.1)' : undefined
+                        boxShadow: errors.diastolicBp ? '0 0 15px rgba(var(--accent-rose-rgb),0.1)' : undefined
                       }}
                       id="bp-dia-input"
                     />
@@ -952,8 +952,8 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
                 {/* Vitals Warn/Status Badge */}
                 {((formData.spo2 && Number(formData.spo2) < 95) || (formData.temperature && Number(formData.temperature) > 100.4) || (formData.systolicBp && Number(formData.systolicBp) > 140)) && (
                   <div style={{
-                    backgroundColor: 'rgba(244,63,94,0.08)',
-                    border: '1px solid rgba(244,63,94,0.2)',
+                    backgroundColor: 'rgba(var(--accent-rose-rgb),0.08)',
+                    border: '1px solid rgba(var(--accent-rose-rgb),0.2)',
                     color: 'var(--accent-rose)',
                     borderRadius: '8px',
                     padding: '10px 14px',
@@ -1017,7 +1017,7 @@ export const TriageWizard: React.FC<TriageWizardProps> = ({ onSubmit, onBack }) 
                       height: '110px',
                       resize: 'none',
                       borderColor: errors.description ? 'var(--accent-rose)' : undefined,
-                      boxShadow: errors.description ? '0 0 15px rgba(244,63,94,0.1)' : undefined,
+                      boxShadow: errors.description ? '0 0 15px rgba(var(--accent-rose-rgb),0.1)' : undefined,
                       paddingRight: '60px'
                     }}
                     id="desc-input"
@@ -1306,8 +1306,8 @@ const styles: { [key: string]: React.CSSProperties } = {
     fontWeight: 600,
   },
   errorAlert: {
-    backgroundColor: 'rgba(244,63,94,0.1)',
-    border: '1px solid rgba(244,63,94,0.2)',
+    backgroundColor: 'rgba(var(--accent-rose-rgb),0.1)',
+    border: '1px solid rgba(var(--accent-rose-rgb),0.2)',
     color: 'var(--accent-rose)',
     padding: '14px',
     borderRadius: '12px',

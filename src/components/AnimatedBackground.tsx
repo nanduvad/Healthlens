@@ -42,7 +42,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     left: '15%',
     width: '45vw',
     height: '45vw',
-    background: 'radial-gradient(circle, var(--accent-cyan) 0%, rgba(6,182,212,0) 70%)',
+    background: 'radial-gradient(circle, var(--accent-cyan) 0%, rgba(var(--accent-cyan-rgb), 0) 70%)',
     animation: 'aurora-drift-1 25s infinite alternate ease-in-out',
   },
   blob2: {
@@ -50,7 +50,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     right: '10%',
     width: '50vw',
     height: '50vw',
-    background: 'radial-gradient(circle, var(--accent-purple) 0%, rgba(168,85,247,0) 70%)',
+    background: 'radial-gradient(circle, var(--accent-purple) 0%, rgba(var(--accent-purple-rgb), 0) 70%)',
     animation: 'aurora-drift-2 30s infinite alternate ease-in-out',
   },
   blob3: {
@@ -58,7 +58,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     right: '25%',
     width: '35vw',
     height: '35vw',
-    background: 'radial-gradient(circle, var(--accent-emerald) 0%, rgba(16,185,129,0) 70%)',
+    background: 'radial-gradient(circle, var(--accent-emerald) 0%, rgba(var(--accent-emerald-rgb), 0) 70%)',
     animation: 'aurora-drift-3 20s infinite alternate ease-in-out',
   },
   gridOverlay: {

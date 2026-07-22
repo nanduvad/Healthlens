@@ -227,7 +227,7 @@ const styles: { [key: string]: React.CSSProperties } = {
     justifyContent: 'center',
   },
   brainSvg: {
-    filter: 'drop-shadow(0 0 10px rgba(6,182,212,0.3))',
+    filter: 'drop-shadow(0 0 10px rgba(var(--accent-cyan-rgb), 0.3))',
   },
   orbitContainer: {
     position: 'absolute',
