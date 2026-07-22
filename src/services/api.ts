@@ -56,6 +56,15 @@ export interface TriageLog {
   severity: string;
   triageLevel: 'High' | 'Medium' | 'Low';
   confidence: number;
+  name?: string;
+  gender?: string;
+  status?: string;
+  examNotes?: string;
+  prescription?: {
+    medName: string;
+    medDosage: string;
+    medDuration: string;
+  } | null;
 }
 
 // Request Helper with fallback simulation
@@ -121,8 +130,13 @@ export async function getPatients(): Promise<{ patients: any[]; total: number }>
   return request<{ patients: any[]; total: number }>('GET', '/patients');
 }
 
-export async function updatePatientStatus(patientId: string, status: string): Promise<any> {
-  return request<any>('PATCH', `/patients/${patientId}/status`, { status });
+export async function updatePatientStatus(
+  patientId: string,
+  status: string,
+  examNotes?: string,
+  prescription?: { medName: string; medDosage: string; medDuration: string }
+): Promise<any> {
+  return request<any>('PATCH', `/patients/${patientId}/status`, { status, examNotes, prescription });
 }
 
 export async function submitFeedback(patientId: string, data: { feedback_type: string; expected_outcome: string }): Promise<any> {
@@ -136,54 +150,214 @@ export async function getAnalytics(): Promise<AnalyticsPayload> {
 // ------------------------------------------------------------------
 // Offline Fallbacks Simulation (Matches OSTA database models)
 // ------------------------------------------------------------------
-const mockPatientsList = [
-  { patient_id: 'PT-2101', name: 'Anil Reddy', age: 48, gender: 'M', urgency: 'Immediate', symptoms: 'Severe chest pain, heavy breathing' },
-  { patient_id: 'PT-2102', name: 'B. Varalakshmi', age: 62, gender: 'F', urgency: 'Within-Day', symptoms: 'Fever of 102F, severe headache' },
-  { patient_id: 'PT-2103', name: 'J. Srinivas', age: 34, gender: 'M', urgency: 'Routine', symptoms: 'Mild cough and sore throat' }
-];
+
+const LOCAL_STORAGE_KEY = 'healthlens_patients';
+
+function getStoredPatientsList(): any[] {
+  if (typeof window === 'undefined') return [];
+  const stored = localStorage.getItem(LOCAL_STORAGE_KEY);
+  if (!stored) {
+    const initial = [
+      {
+        patient_id: 'PT-2101',
+        name: 'Anil Reddy',
+        age: 48,
+        gender: 'M',
+        urgency: 'Immediate',
+        symptoms: 'Severe chest pain, heavy breathing',
+        status: 'doctor_review',
+        arrival_time: new Date(Date.now() - 3600000).toISOString(),
+        confidence: 94,
+        examNotes: '',
+        prescription: null
+      },
+      {
+        patient_id: 'PT-2102',
+        name: 'B. Varalakshmi',
+        age: 62,
+        gender: 'F',
+        urgency: 'Within-Day',
+        symptoms: 'Fever of 102F, severe headache',
+        status: 'doctor_review',
+        arrival_time: new Date(Date.now() - 7200000).toISOString(),
+        confidence: 88,
+        examNotes: '',
+        prescription: null
+      },
+      {
+        patient_id: 'PT-2103',
+        name: 'J. Srinivas',
+        age: 34,
+        gender: 'M',
+        urgency: 'Routine',
+        symptoms: 'Mild cough and sore throat',
+        status: 'doctor_review',
+        arrival_time: new Date(Date.now() - 10800000).toISOString(),
+        confidence: 82,
+        examNotes: '',
+        prescription: null
+      }
+    ];
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(initial));
+    return initial;
+  }
+  try {
+    return JSON.parse(stored);
+  } catch (e) {
+    console.error('Error parsing stored patients, resetting storage', e);
+    return [];
+  }
+}
+
+function saveStoredPatientsList(patients: any[]) {
+  if (typeof window !== 'undefined') {
+    localStorage.setItem(LOCAL_STORAGE_KEY, JSON.stringify(patients));
+  }
+}
 
 function getOfflineFallback<T>(method: string, path: string, body: any): T {
   // GET /assessments/next-id
   if (method === 'GET' && path === '/assessments/next-id') {
-    const id = `PT-${Math.floor(1000 + Math.random() * 9000)}`;
+    const list = getStoredPatientsList();
+    let id = `PT-${Math.floor(1000 + Math.random() * 9000)}`;
+    while (list.some((p: any) => p.patient_id === id)) {
+      id = `PT-${Math.floor(1000 + Math.random() * 9000)}`;
+    }
     return { patient_id: id } as any;
   }
 
   // POST /patients/lookup
   if (method === 'POST' && path === '/patients/lookup') {
+    const list = getStoredPatientsList();
+    const match = list.find(
+      (p: any) =>
+        p.name?.toLowerCase() === body.name?.toLowerCase() &&
+        p.age === body.age &&
+        String(p.contact_verification) === String(body.contact_verification)
+    );
+    if (match) {
+      return { exists: true, patient_id: match.patient_id } as any;
+    }
     return { exists: false } as any;
   }
 
   // POST /patients/register
   if (method === 'POST' && path === '/patients/register') {
-    return { patient_id: body.patient_id || 'PT-2051' } as any;
+    const list = getStoredPatientsList();
+    const patientId = body.patient_id || `PT-${Math.floor(1000 + Math.random() * 9000)}`;
+    const newPatient = {
+      patient_id: patientId,
+      name: body.name,
+      age: body.age,
+      gender: body.gender,
+      contact_verification: body.contact_verification,
+      status: 'waiting',
+      arrival_time: new Date().toISOString(),
+      symptoms: '',
+      urgency: 'Routine',
+      confidence: 80,
+      examNotes: '',
+      prescription: null
+    };
+    const idx = list.findIndex((p: any) => p.patient_id === patientId);
+    if (idx !== -1) {
+      list[idx] = { ...list[idx], ...newPatient };
+    } else {
+      list.push(newPatient);
+    }
+    saveStoredPatientsList(list);
+    return { patient_id: patientId } as any;
   }
 
   // POST /assessments
   if (method === 'POST' && path === '/assessments') {
+    const list = getStoredPatientsList();
+    const patientId = body.patient_id;
+    const idx = list.findIndex((p: any) => p.patient_id === patientId);
+    if (idx !== -1) {
+      list[idx].symptoms = body.selected_chips || body.symptoms || '';
+      list[idx].severity = body.severity;
+      list[idx].additional_notes = body.additional_notes || '';
+    } else {
+      list.push({
+        patient_id: patientId,
+        name: 'Anonymous',
+        age: 30,
+        gender: 'M',
+        status: 'waiting',
+        arrival_time: new Date().toISOString(),
+        symptoms: body.selected_chips || body.symptoms || '',
+        severity: body.severity,
+        additional_notes: body.additional_notes || '',
+        urgency: 'Routine',
+        confidence: 80,
+        examNotes: '',
+        prescription: null
+      });
+    }
+    saveStoredPatientsList(list);
     return { success: true } as any;
   }
 
   // POST /assessments/:id/triage
   if (method === 'POST' && path.includes('/triage')) {
+    const parts = path.split('/');
+    const patientId = parts[2];
+    const list = getStoredPatientsList();
+    const idx = list.findIndex((p: any) => p.patient_id === patientId);
+
+    const rand = Math.random();
+    const urgency = rand > 0.6 ? 'Immediate' : (rand > 0.3 ? 'Within-Day' : 'Routine');
+    const confidence = Math.floor(80 + Math.random() * 18);
+
+    if (idx !== -1) {
+      list[idx].urgency = urgency;
+      list[idx].confidence = confidence;
+      list[idx].status = 'doctor_review';
+    }
+    saveStoredPatientsList(list);
+
+    const resultKey = `triage_res_${patientId}`;
+    const result: TriageResult = {
+      urgency,
+      red_flags: urgency === 'Immediate' ? 'Chest Pain, Breathing Difficulty' : '',
+      red_flag_triggered: urgency === 'Immediate',
+      classification_reasoning: urgency === 'Immediate'
+        ? 'Immediate safety red flags triggered.'
+        : 'Symptom analysis indicates stable vital indices.',
+      ai_summary: `Patient reports symptom duration and severity matching ${urgency.toLowerCase()} outpatient metrics. Recommended clinician review.`,
+      summary_status: 'completed'
+    };
+    localStorage.setItem(resultKey, JSON.stringify(result));
+
     return { success: true } as any;
   }
 
   // GET /assessments/:id/triage
   if (method === 'GET' && path.includes('/triage')) {
-    // Generate simulated classification outcome based on URL ID or random
+    const parts = path.split('/');
+    const patientId = parts[2];
+    const resultKey = `triage_res_${patientId}`;
+    const storedResult = localStorage.getItem(resultKey);
+    if (storedResult) {
+      try {
+        return JSON.parse(storedResult);
+      } catch (e) {
+        console.error(e);
+      }
+    }
+
     const rand = Math.random();
-    const result: TriageResult = {
+    return {
       urgency: rand > 0.6 ? 'Immediate' : (rand > 0.3 ? 'Within-Day' : 'Routine'),
       red_flags: rand > 0.6 ? 'Chest Pain, Breathing Difficulty' : '',
       red_flag_triggered: rand > 0.6,
-      classification_reasoning: rand > 0.6 
-        ? 'Immediate safety red flags triggered.' 
+      classification_reasoning: rand > 0.6
+        ? 'Immediate safety red flags triggered.'
         : 'Symptom analysis indicates stable vital indices.',
       ai_summary: 'Patient reports symptom duration and severity matching routine outpatient metrics. Recommended self-monitoring and hydration.',
       summary_status: 'completed'
-    };
-    return result as any;
+    } as any;
   }
 
   // POST /assessments/normalize
@@ -217,20 +391,41 @@ function getOfflineFallback<T>(method: string, path: string, body: any): T {
 
   // GET /patients
   if (method === 'GET' && path === '/patients') {
+    const list = getStoredPatientsList();
     return {
-      patients: mockPatientsList,
-      total: mockPatientsList.length
+      patients: list,
+      total: list.length
     } as any;
+  }
+
+  // PATCH /patients/:id/status
+  if (method === 'PATCH' && path.includes('/status')) {
+    const parts = path.split('/');
+    const patientId = parts[2];
+    const list = getStoredPatientsList();
+    const idx = list.findIndex((p: any) => p.patient_id === patientId);
+    if (idx !== -1) {
+      list[idx].status = body.status;
+      if (body.examNotes !== undefined) {
+        list[idx].examNotes = body.examNotes;
+      }
+      if (body.prescription !== undefined) {
+        list[idx].prescription = body.prescription;
+      }
+      saveStoredPatientsList(list);
+    }
+    return { success: true } as any;
   }
 
   // GET /system/analytics
   if (method === 'GET' && path === '/system/analytics') {
+    const list = getStoredPatientsList();
     return {
       metrics: {
         accuracy: 94.6,
         avg_processing_time: 4.2,
         override_rate: 6.1,
-        total_patients: mockPatientsList.length + 105
+        total_patients: list.length + 105
       },
       charts: {
         footfall: {

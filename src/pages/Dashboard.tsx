@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Activity, Clock, Trash2, Home, Inbox, Plus, HelpCircle, Settings, Sparkles, Send, CheckCircle2, HeartPulse, Pill, X, Bot, Volume2, Mic, FileText } from 'lucide-react';
-import { getPatients, getAnalytics, type AnalyticsPayload, type TriageLog } from '../services/api';
+import { getPatients, getAnalytics, updatePatientStatus, type AnalyticsPayload, type TriageLog } from '../services/api';
 import { type Role } from '../App';
 
 interface DashboardProps {
@@ -36,6 +36,34 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
   const [medDuration, setMedDuration] = useState('5 Days');
   const [prescriptionIssued, setPrescriptionIssued] = useState(false);
   const [activeExamTab, setActiveExamTab] = useState<'exam' | 'copilot' | 'prescription'>('exam');
+
+  const [shouldAdmit, setShouldAdmit] = useState(false);
+  const [activeQueueTab, setActiveQueueTab] = useState<'queue' | 'admitted' | 'discharged'>('queue');
+
+  const handleUpdatePatientStatus = async (patientId: string, status: string) => {
+    try {
+      await updatePatientStatus(patientId, status);
+      await fetchDashboardData();
+    } catch (e) {
+      console.error("Failed to update status", e);
+    }
+  };
+
+  useEffect(() => {
+    if (selectedPatientForExam) {
+      setExamNotes(selectedPatientForExam.examNotes || '');
+      setMedName(selectedPatientForExam.prescription?.medName || 'Paracetamol 500mg');
+      setMedDosage(selectedPatientForExam.prescription?.medDosage || '1 tablet twice daily after meals');
+      setMedDuration(selectedPatientForExam.prescription?.medDuration || '5 Days');
+      setShouldAdmit(selectedPatientForExam.status === 'admitted');
+    } else {
+      setExamNotes('');
+      setMedName('Paracetamol 500mg');
+      setMedDosage('1 tablet twice daily after meals');
+      setMedDuration('5 Days');
+      setShouldAdmit(false);
+    }
+  }, [selectedPatientForExam]);
 
   const icd10Mappings: Record<string, { code: string; diagnosis: string; guidelines: string }> = {
     'Chest Pain': { code: 'I20.9', diagnosis: 'Angina Pectoris, unspecified', guidelines: 'Order emergency ECG and cardiac enzymes. Monitor BP continuously. Prepare IV access.' },
@@ -181,10 +209,15 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
           id: p.patient_id || 'PT-Unknown',
           date: p.arrival_time ? new Date(p.arrival_time).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }) : 'Just now',
           age: p.age ? String(p.age) : '30',
-          symptoms: p.symptoms ? p.symptoms.split(', ') : [],
+          symptoms: Array.isArray(p.symptoms) ? p.symptoms : (p.symptoms ? String(p.symptoms).split(', ') : []),
           severity: p.severity ? String(p.severity) : 'Medium',
           triageLevel: level,
           confidence: p.confidence || (level === 'High' ? 94 : (level === 'Medium' ? 88 : 82)),
+          name: p.name || 'Anonymous',
+          gender: p.gender || 'F',
+          status: p.status || 'doctor_review',
+          examNotes: p.examNotes || '',
+          prescription: p.prescription || null,
         };
       });
 
@@ -205,12 +238,23 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
   }, []);
 
   useEffect(() => {
-    if (filter === 'All') {
-      setFilteredLogs(logs);
-    } else {
-      setFilteredLogs(logs.filter(l => l.triageLevel === filter));
+    let result = logs;
+    
+    // Filter by Active Queue Tab
+    if (activeQueueTab === 'queue') {
+      result = result.filter(l => !l.status || ['waiting', 'doctor_review', 'room_101', 'room_102'].includes(l.status as string));
+    } else if (activeQueueTab === 'admitted') {
+      result = result.filter(l => l.status === 'admitted');
+    } else if (activeQueueTab === 'discharged') {
+      result = result.filter(l => l.status ? ['examined', 'discharged'].includes(l.status as string) : false);
     }
-  }, [filter, logs]);
+
+    // Filter by Triage Level
+    if (filter !== 'All') {
+      result = result.filter(l => l.triageLevel === filter);
+    }
+    setFilteredLogs(result);
+  }, [filter, logs, activeQueueTab]);
 
   const handleClearHistory = () => {
     setLogs([]);
@@ -362,6 +406,47 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
                 </div>
               </div>
 
+              {/* Queue Status Tabs */}
+              <div style={{ display: 'flex', borderBottom: '1px solid var(--border-primary)', paddingBottom: '2px', gap: '20px', overflowX: 'auto', marginBottom: '8px' }}>
+                {[
+                  { id: 'queue', label: 'Active Intake Queue', count: logs.filter(l => !l.status || ['waiting', 'doctor_review', 'room_101', 'room_102'].includes(l.status as string)).length },
+                  { id: 'admitted', label: 'Admitted Ward', count: logs.filter(l => l.status === 'admitted').length },
+                  { id: 'discharged', label: 'Discharged / Completed', count: logs.filter(l => l.status ? ['examined', 'discharged'].includes(l.status as string) : false).length }
+                ].map((t) => (
+                  <button
+                    key={t.id}
+                    onClick={() => setActiveQueueTab(t.id as any)}
+                    style={{
+                      padding: '8px 4px',
+                      background: 'none',
+                      border: 'none',
+                      borderBottom: activeQueueTab === t.id ? '2px solid var(--accent-cyan)' : '2px solid transparent',
+                      color: activeQueueTab === t.id ? 'var(--accent-cyan)' : 'var(--text-secondary)',
+                      fontWeight: 700,
+                      fontSize: '0.85rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '6px',
+                      whiteSpace: 'nowrap',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    {t.label}
+                    <span style={{
+                      fontSize: '0.7rem',
+                      padding: '1px 6px',
+                      borderRadius: '6px',
+                      backgroundColor: activeQueueTab === t.id ? 'rgba(6,182,212,0.15)' : 'rgba(255,255,255,0.04)',
+                      color: activeQueueTab === t.id ? 'var(--accent-cyan)' : 'var(--text-muted)',
+                      fontWeight: 600
+                    }}>
+                      {t.count}
+                    </span>
+                  </button>
+                ))}
+              </div>
+
               <AnimatePresence mode="wait">
                 {filteredLogs.length === 0 ? (
                   <motion.div
@@ -411,12 +496,49 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
                         >
                           <div style={styles.logMeta}>
                             <div style={styles.logLeft}>
-                              <span style={styles.logDate}>{item.date}</span>
+                              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                                <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--text-primary)' }}>
+                                  {item.name || 'Anonymous Patient'}
+                                </span>
+                                {item.status && (
+                                  <span style={{
+                                    fontSize: '0.65rem',
+                                    fontWeight: 700,
+                                    padding: '2px 6px',
+                                    borderRadius: '4px',
+                                    textTransform: 'uppercase',
+                                    letterSpacing: '0.5px',
+                                    backgroundColor: 
+                                      item.status === 'admitted' ? 'rgba(244,63,94,0.1)' :
+                                      item.status === 'examined' ? 'rgba(16,185,129,0.1)' :
+                                      item.status.startsWith('room') ? 'rgba(6,182,212,0.1)' : 'rgba(249,115,22,0.1)',
+                                    color: 
+                                      item.status === 'admitted' ? 'var(--accent-rose)' :
+                                      item.status === 'examined' ? 'var(--accent-emerald)' :
+                                      item.status.startsWith('room') ? 'var(--accent-cyan)' : 'var(--accent-orange)',
+                                    border: `1px solid ${
+                                      item.status === 'admitted' ? 'rgba(244,63,94,0.2)' :
+                                      item.status === 'examined' ? 'rgba(16,185,129,0.2)' :
+                                      item.status.startsWith('room') ? 'rgba(6,182,212,0.2)' : 'rgba(249,115,22,0.2)'
+                                    }`,
+                                    boxShadow: item.status === 'admitted' ? '0 0 8px rgba(244,63,94,0.1)' : 'none'
+                                  }}>
+                                    {item.status === 'admitted' ? 'Admitted Ward' :
+                                     item.status === 'examined' ? 'Prescribed' :
+                                     item.status === 'room_101' ? 'In Room 101' :
+                                     item.status === 'room_102' ? 'In Room 102' :
+                                     item.status === 'discharged' ? 'Discharged' : 'Waiting for Doctor'}
+                                  </span>
+                                )}
+                              </div>
                               <span style={styles.logAge}>Patient ID: <strong>{item.id}</strong> | Age: {item.age}</span>
                             </div>
-                            <span className={`pulse-badge ${badgeColors[item.triageLevel]}`} style={styles.logBadge}>
-                              {item.triageLevel}
-                            </span>
+                            <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '4px' }}>
+                              <span style={styles.logDate}>{item.date}</span>
+                              <span className={`pulse-badge ${badgeColors[item.triageLevel]}`} style={styles.logBadge}>
+                                {item.triageLevel}
+                              </span>
+                            </div>
                           </div>
 
                           <div style={styles.logBody}>
@@ -428,7 +550,32 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
                             <div style={styles.confidenceChip}>
                               Consensus Confidence: {item.confidence}%
                             </div>
+                          </div>
 
+                          {/* Extra info for Admitted / Examined patients */}
+                          {(item.examNotes || item.prescription) && (
+                            <div style={{
+                              padding: '12px',
+                              borderRadius: '8px',
+                              backgroundColor: 'rgba(255,255,255,0.01)',
+                              border: '1px solid var(--border-primary)',
+                              fontSize: '0.8rem',
+                              color: 'var(--text-secondary)',
+                              marginTop: '4px',
+                              display: 'flex',
+                              flexDirection: 'column',
+                              gap: '6px'
+                            }}>
+                              {item.examNotes && (
+                                <div><strong>Doctor Notes:</strong> {item.examNotes}</div>
+                              )}
+                              {item.prescription && (
+                                <div><strong>Prescription:</strong> {item.prescription.medName} ({item.prescription.medDosage} for {item.prescription.medDuration})</div>
+                              )}
+                            </div>
+                          )}
+
+                          <div style={{ display: 'flex', justifyContent: 'flex-start', alignItems: 'center', width: '100%', gap: '8px' }}>
                             {/* Doctor Examine Shortcut */}
                             {role === 'doctor' && (
                               <button
@@ -448,20 +595,21 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
                                   gap: '6px'
                                 }}
                               >
-                                <HeartPulse size={12} /> Examine & Prescribe
+                                <HeartPulse size={12} />
+                                {item.status === 'examined' || item.status === 'admitted' ? 'Review & Edit Exam' : 'Examine & Prescribe'}
                               </button>
                             )}
 
                             {/* Nurse Queue Dispatcher controls */}
-                            {role === 'nurse' && (
+                            {role === 'nurse' && (!item.status || ['waiting', 'doctor_review', 'room_101', 'room_102'].includes(item.status)) && (
                               <div style={{ display: 'flex', gap: '8px', marginTop: '12px', alignItems: 'center', width: '100%' }}>
                                 <button
-                                  onClick={() => alert(`Patient ${item.id} routed to Doctor Room 101`)}
+                                  onClick={() => handleUpdatePatientStatus(item.id, 'room_101')}
                                   style={{
                                     padding: '6px 12px',
                                     borderRadius: '6px',
                                     border: '1px solid var(--accent-cyan)',
-                                    backgroundColor: 'transparent',
+                                    backgroundColor: item.status === 'room_101' ? 'rgba(6,182,212,0.1)' : 'transparent',
                                     color: 'var(--accent-cyan)',
                                     fontSize: '0.75rem',
                                     fontWeight: 600,
@@ -471,12 +619,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
                                   Dr. Room 101
                                 </button>
                                 <button
-                                  onClick={() => alert(`Patient ${item.id} routed to Doctor Room 102`)}
+                                  onClick={() => handleUpdatePatientStatus(item.id, 'room_102')}
                                   style={{
                                     padding: '6px 12px',
                                     borderRadius: '6px',
                                     border: '1px solid var(--accent-cyan)',
-                                    backgroundColor: 'transparent',
+                                    backgroundColor: item.status === 'room_102' ? 'rgba(6,182,212,0.1)' : 'transparent',
                                     color: 'var(--accent-cyan)',
                                     fontSize: '0.75rem',
                                     fontWeight: 600,
@@ -486,7 +634,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
                                   Dr. Room 102
                                 </button>
                                 <button
-                                  onClick={() => alert(`Patient ${item.id} marked as Routine Discharge`)}
+                                  onClick={() => handleUpdatePatientStatus(item.id, 'discharged')}
                                   style={{
                                     padding: '6px 12px',
                                     borderRadius: '6px',
@@ -840,13 +988,48 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
                             />
                           </div>
 
+                          {/* Admission Toggle */}
+                          <div style={{
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'space-between',
+                            padding: '10px 12px',
+                            borderRadius: '8px',
+                            backgroundColor: 'rgba(255,255,255,0.02)',
+                            border: '1px solid var(--border-primary)',
+                            marginTop: '4px'
+                          }}>
+                            <span style={{ fontSize: '0.8rem', fontWeight: 600, color: 'var(--text-primary)' }}>
+                              Admit Patient to Ward?
+                            </span>
+                            <input
+                              type="checkbox"
+                              checked={shouldAdmit}
+                              onChange={(e) => setShouldAdmit(e.target.checked)}
+                              style={{ width: '16px', height: '16px', cursor: 'pointer', accentColor: 'var(--accent-rose)' }}
+                            />
+                          </div>
+
                           <button
-                            onClick={() => {
-                              setPrescriptionIssued(true);
-                              alert(`Prescription for ${selectedPatientForExam.id} has been issued successfully.`);
+                            onClick={async () => {
+                              try {
+                                const finalStatus = shouldAdmit ? 'admitted' : 'examined';
+                                await updatePatientStatus(
+                                  selectedPatientForExam.id,
+                                  finalStatus,
+                                  examNotes,
+                                  { medName, medDosage, medDuration }
+                                );
+                                setPrescriptionIssued(true);
+                                alert(`Prescription for ${selectedPatientForExam.id} has been issued successfully. Status set to: ${finalStatus === 'admitted' ? 'Admitted to Ward' : 'Prescribed & Completed'}.`);
+                                await fetchDashboardData(); // reload
+                              } catch (err) {
+                                console.error(err);
+                                alert("Failed to complete examination.");
+                              }
                             }}
                             style={{
-                              backgroundColor: 'var(--accent-rose)',
+                              backgroundColor: shouldAdmit ? 'var(--accent-rose)' : 'var(--accent-emerald)',
                               border: 'none',
                               color: '#fff',
                               padding: '12px',
@@ -854,10 +1037,12 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
                               fontWeight: 700,
                               cursor: 'pointer',
                               fontSize: '0.9rem',
-                              marginTop: '8px'
+                              marginTop: '8px',
+                              boxShadow: shouldAdmit ? '0 0 10px rgba(244,63,94,0.3)' : '0 0 10px rgba(16,185,129,0.3)',
+                              transition: 'all 0.3s ease'
                             }}
                           >
-                            Sign & Issue Prescription
+                            {shouldAdmit ? 'Sign, Prescribe & Admit Patient' : 'Sign & Issue Prescription'}
                           </button>
                         </div>
                       </>
@@ -930,7 +1115,7 @@ export const Dashboard: React.FC<DashboardProps> = ({ onStartNew, onBackHome, ro
 
                           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px', fontSize: '0.75rem', marginBottom: '12px', borderBottom: '1px solid #eee', paddingBottom: '8px' }}>
                             <div><strong>Patient ID:</strong> {selectedPatientForExam.id}</div>
-                            <div><strong>Age / Sex:</strong> {selectedPatientForExam.age} / Female</div>
+                            <div><strong>Age / Sex:</strong> {selectedPatientForExam.age} / {selectedPatientForExam.gender === 'M' ? 'Male' : (selectedPatientForExam.gender === 'F' ? 'Female' : (selectedPatientForExam.gender || 'Other'))}</div>
                             <div><strong>Date:</strong> {new Date().toLocaleDateString()}</div>
                             <div><strong>Triage Level:</strong> {selectedPatientForExam.triageLevel}</div>
                           </div>
